@@ -6,9 +6,10 @@ import json
 
 app = application = bottle.default_app()
 
+
 def rate(fn):
     def _wrap(*args, **kwargs):
-        ip = bottle.request.environ.get('REMOTE_ADDR')
+        ip = bottle.request.environ.get(settings.http_ip_field)
         try:
             r = connect(settings.ratelimit_db)
         except:
@@ -16,19 +17,20 @@ def rate(fn):
             bottle.response.status = 501
             return bottle.template('error.html', generic_message=generic_message, detailed_message=False)
         try:
-            atempts = r.get(ip)
-            if not atempts:
-                atempts = bytes([1])
+            attempts = r.get(ip)
+            if not attempts:
+                attempts = bytes([1])
         except Exception as e:
             generic_message = 'There was a problem'
             bottle.response.status = 500
             return bottle.template('error.html', generic_message=generic_message, detailed_message=False)
-        atempts = bytes_to_int(atempts)
-        atempts += 1
-        r.setex(ip, 5, int_to_bytes(atempts))
-        if atempts > 10 :
+        attempts = bytes_to_int(attempts)
+        attempts += 1
+        r.setex(ip, 5, int_to_bytes(attempts))
+        if attempts > 10 :
             generic_message = 'Please stop'
             bottle.response.status = 439
+            r.setex(ip, 3600, int_to_bytes(attempts))
             return bottle.template('error.html', generic_message=generic_message, detailed_message=False)
         return fn(*args, **kwargs)
     return _wrap
