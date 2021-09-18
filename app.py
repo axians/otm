@@ -3,6 +3,9 @@ import redis
 import settings
 import logging
 import json
+import time
+import hashlib
+import uuid
 
 app = application = bottle.default_app()
 
@@ -14,7 +17,7 @@ def rate(fn):
             r = connect(settings.ratelimit_db)
         except:
             generic_message = 'There was a problem comunicating with the database.'
-            bottle.response.status = 501
+            bottle.response.status = 500
             return bottle.template('error.html', generic_message=generic_message, detailed_message=False)
         try:
             attempts = r.get(ip)
@@ -28,10 +31,11 @@ def rate(fn):
         attempts += 1
         r.setex(ip, 5, int_to_bytes(attempts))
         if attempts > 10 :
-            generic_message = 'Please stop'
-            bottle.response.status = 439
-            r.setex(ip, 3600, int_to_bytes(attempts))
-            return bottle.template('error.html', generic_message=generic_message, detailed_message=False)
+            generic_message = 'You have been temporarily banned due to excessive requests'
+            detailed_message = 'If you feel like this is / was a misstake please contact the system owner.'
+            bottle.response.status = 429
+            r.setex(ip, 86400, int_to_bytes(attempts))
+            return bottle.template('error.html', generic_message=generic_message, detailed_message=detailed_message)
         return fn(*args, **kwargs)
     return _wrap
 
@@ -54,6 +58,10 @@ def update_redis(key, message, ttl=3600):
   return h
 
 
+def generate_key():
+    return hashlib.sha256(f'{str(uuid.uuid4())} - {str(time.time())}'.encode()).hexdigest()
+
+
 @bottle.post('/')
 def add_message():
     try:
@@ -68,10 +76,11 @@ def add_message():
         generic_message = 'There was a problem comunicating with the database.'
         bottle.response.status = 500
         return {'status':500, 'message':generic_message}
-    if update_redis(data['key'], data['message'], data['ttl']):
+    key = generate_key()
+    if update_redis(key, data['message']):
         generic_message = 'Message stored in database'
         bottle.response.status = 200
-        return {'status':200, 'message':generic_message, 'link':f'{settings.uri}/{data["key"]}'}
+        return {'status':200, 'message':generic_message, 'link':f'{settings.uri}/{key}'}
     else:
         bottle.response.status = 500
         return {'status':500, 'message':generic_message}
