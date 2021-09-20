@@ -4,3 +4,5 @@ redis_port = ''
 db = ''
 ratelimit_db = ''
 uri = ''
+http_ip_field = ''
+bad_chars = []
