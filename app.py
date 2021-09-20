@@ -136,7 +136,7 @@ Eg:
 You will recive you uniq_link in the responce body.
 
 Eg:
-    $ curl -s -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri} | jq
+    curl -s -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri} | jq
     {{
       "status": 200,
       "message": "Message stored in database",
