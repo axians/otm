@@ -133,7 +133,7 @@ In the request body submit a valid json containing the message.
 Eg:
     curl -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri}
 
-You will recive you uniq_link in the responce body.
+You will recive you uniq_link in the response body.
 
 Eg:
     curl -s -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri} | jq
