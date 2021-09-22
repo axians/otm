@@ -6,16 +6,17 @@ Eg:
 ```
     curl -XPOST -d '{"message":"This is your secret message!"}' https:/<YOUR_URL>/
 ```
-You will recive you uniq_link in the responce body.  
+You will recive you uniq_link in the responce body.
 
-Eg:  
+Eg:
 ```json
     $ curl -s -XPOST -d '{"message":"This is your secret message!"}' https://<YOUR_URL> | jq
     {
-      "status": 200,
-      "message": "Message stored in database",
-      "link": "https://<YOUR_URL>?uniq_link=3cc06e9ae6319921dd6a1abab14ae9149d417381bee3c315d16bafad5d3036f8",
-      "key": "3cc06e9ae6319921dd6a1abab14ae9149d417381bee3c315d16bafad5d3036f8"
+      "status": "Success",
+      "message": {
+        "link": "{settings.uri}?link=3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41",
+        "key": "3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41"
+      }
     }
 ```
 
