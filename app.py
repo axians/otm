@@ -7,7 +7,6 @@ import time
 import hashlib
 import uuid
 import string
-
 app = application = bottle.default_app()
 
 
@@ -17,26 +16,35 @@ def rate(fn):
         try:
             r = connect(settings.ratelimit_db)
         except:
-            generic_message = 'There was a problem comunicating with the database.'
+            generic_message = 'There was a problem communicating with the database.'
             bottle.response.status = 500
-            return bottle.template('error.html', generic_message=generic_message, message=False)
+            if bottle.request.method == 'GET':
+                return bottle.template('error.html', generic_message=generic_message, message=False)
+            else:
+                return {'status':'Failure', 'error':[generic_message]}
         try:
             attempts = r.get(ip)
             if not attempts:
                 attempts = bytes([1])
         except Exception as e:
-            generic_message = 'There was a problem'
+            generic_message = 'There was a problem '
             bottle.response.status = 500
-            return bottle.template('error.html', generic_message=generic_message, message=False)
+            if bottle.request.method == 'GET':
+                return bottle.template('error.html', generic_message=generic_message, message=False)
+            else:
+                return {'status':'Failure', 'error':[generic_message]}
         attempts = bytes_to_int(attempts)
         attempts += 1
         r.setex(ip, 5, int_to_bytes(attempts))
         if attempts > 10 :
             generic_message = 'You have been temporarily banned due to excessive requests'
-            message = 'If you feel like this is / was a misstake please contact the system owner.'
-            bottle.response.status = 429
+            message = 'If you feel like this is/was a misstake please contact the system owner.'
             r.setex(ip, 86400, int_to_bytes(attempts))
-            return bottle.template('error.html', generic_message=generic_message, message=message)
+            bottle.response.status = 429
+            if bottle.request.method == 'GET':
+                return bottle.template('error.html', generic_message=generic_message, message=message)
+            else:
+                return {'status':'Failure', 'error':[generic_message]}
         return fn(*args, **kwargs)
     return _wrap
 
@@ -89,7 +97,7 @@ Please contact the system owner and inform them that "{why}" casued this to happ
 
 If you feel like no external WAF is implemented please stop FUZZing the application.
 '''
-    bottle.response.status = 401
+    bottle.response.status = 400
     return bottle.template('error.html', generic_message=generic_message, message=message)
 
 
@@ -102,24 +110,22 @@ def add_message():
         message = data['message']
     except:
         bottle.response.status = 400
-        return {'status':400, 'message':'Wrong input parameters'}
+        return {'status':'Failure', 'error':['Wrong input parameters']}
     if not validate_message(message):
         bottle.response.status = 400
-        return {'status':400, 'message':'Bad chars in message'}
+        return {'status':'Failure', 'error':['Bad charachters in payload']}
     try:
         r = connect()
     except:
-        generic_message = 'There was a problem comunicating with the database.'
         bottle.response.status = 500
-        return {'status':500, 'message':generic_message}
+        return {'status':'Failure', 'error':['There was a problem communicating with the database']}
     key = generate_key()
     if update_redis(key, message):
-        generic_message = 'Message stored in database'
         bottle.response.status = 200
-        return {'status':200, 'message':generic_message, 'link':f'{settings.uri}/?uniq_link={key}', 'key':key}
+        return {'status':'Success', 'message':{'link':f'{settings.uri}/?link={key}', 'key':key}}
     else:
         bottle.response.status = 500
-        return {'status':500, 'message':generic_message}
+        return {'status':'Failure', 'error':['Failed to store message in database']}
 
 
 @bottle.get('/')
@@ -133,17 +139,17 @@ In the request body submit a valid json containing the message.
 Eg:
     curl -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri}
 
-You will recive you uniq_link in the response body.
+You will recive you unique link in the response body.
 
 Eg:
     curl -s -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri} | jq
     {{
-      "status": 200,
-      "message": "Message stored in database",
-      "link": "{settings.uri}?uniq_link=3cc06e9ae6319921dd6a1abab14ae9149d417381bee3c315d16bafad5d3036f8",
-      "key": "3cc06e9ae6319921dd6a1abab14ae9149d417381bee3c315d16bafad5d3036f8"
+      "status": "Success",
+      "message": {{
+        "link": "{settings.uri}?link=3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41",
+        "key": "3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41"
+      }} 
     }}
-
 
 Disclaimer:
 This is a proof of concept app that was created to help define a requirement.
@@ -151,36 +157,33 @@ It is NOT intendet for production use!
 
 Causion:
 There is a rate-limiter in place.
-
-
     '''
-    uniq_link = bottle.request.query.uniq_link
-    if not uniq_link:
+    link = bottle.request.query.link
+    if not link:
         bottle.response.status = 200
         return bottle.template('index.html', generic_message=generic_message, message=message)
-    if not validate_link(uniq_link):
+    if not validate_link(link):
         generic_message = 'The link you have provided is not valid.'
         bottle.response.status = 400
         return bottle.template('error.html', generic_message=generic_message, message=False)
     try:
         r = connect()
     except:
-        generic_message = 'There was a problem comunicating with the database.'
+        generic_message = 'There was a problem communicating with the database.'
         bottle.response.status = 500
         return bottle.template('error.html', generic_message=generic_message, message=False)
-    message = r.get(uniq_link)
-    ttl = r.ttl(uniq_link)
+    message = r.get(link)
+    ttl = r.ttl(link)
     if not message:
         generic_message = 'No message found on that link'
         bottle.response.status = 200
         return bottle.template('index.html', generic_message=generic_message, message=message)
-    if uniq_link in ['hello']:
+    if link in ['hello']:
         bottle.response.status = 200
         return bottle.template('message.html', generic_message=generic_message, message=message)
     try:
-        r.delete(uniq_link)
+        r.delete(link)
     except:
-        bottle.response.status = 500
         generic_message = 'Failed to delete message'
         message = f'''
 Since the message was not deleted we will not send it.
@@ -188,6 +191,7 @@ If the error persist please contact the system owner.
 
 Time left before your message expires: {ttl}
         '''
+        bottle.response.status = 500
         return bottle.template('error.html', generic_message=generic_message, message=message)
     generic_message = 'This message has been deleted and will not be visible again'
     bottle.response.status = 200

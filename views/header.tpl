@@ -3,6 +3,7 @@
 
 <head>
     <title>{{title}}</title>
+    <link rel="icon" type="image/png" href="favicon.png"/>
     <style>
         .message {
             display: inline-block;
