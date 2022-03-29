@@ -25,7 +25,7 @@ def rate(fn):
         try:
             attempts = r.get(ip)
             if not attempts:
-                attempts = bytes([1])
+                attempts = bytes([0])
         except Exception as e:
             generic_message = 'There was a problem '
             bottle.response.status = 500
