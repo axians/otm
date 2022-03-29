@@ -58,7 +58,7 @@ def int_to_bytes(i):
 
 
 def connect(db=settings.db):
-    return redis.StrictRedis(settings.redis_host, port=settings.redis_port, db=db)
+    return redis.StrictRedis(settings.redis_host, port=settings.redis_port, db=db, password=settings.redis_pass)
 
 
 def update_redis(key, message, ttl=3600):
