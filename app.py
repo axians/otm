@@ -7,10 +7,15 @@ import time
 import hashlib
 import uuid
 import string
+
 app = application = bottle.default_app()
 
 
 def rate(fn):
+    """
+    Decorator function that implements rate limiting for requests based on the client's IP address.
+    It checks the number of attempts made by the client within a certain time period and blocks further requests if the limit is exceeded.
+    """
     def _wrap(*args, **kwargs):
         ip = bottle.request.environ.get(settings.http_ip_field)
         try:
@@ -21,7 +26,7 @@ def rate(fn):
             if bottle.request.method == 'GET':
                 return bottle.template('error.html', generic_message=generic_message, message=False)
             else:
-                return {'status':'Failure', 'error':[generic_message]}
+                return {'status': 'Failure', 'error': [generic_message]}
         try:
             attempts = r.get(ip)
             if not attempts:
@@ -32,52 +37,73 @@ def rate(fn):
             if bottle.request.method == 'GET':
                 return bottle.template('error.html', generic_message=generic_message, message=False)
             else:
-                return {'status':'Failure', 'error':[generic_message]}
+                return {'status': 'Failure', 'error': [generic_message]}
         attempts = bytes_to_int(attempts)
         attempts += 1
         r.setex(ip, 5, int_to_bytes(attempts))
-        if attempts > 10 :
+        if attempts > 10:
             generic_message = 'You have been temporarily banned due to excessive requests'
-            message = 'If you feel like this is/was a misstake please contact the system owner.'
+            message = 'If you feel like this is/was a mistake please contact the system owner.'
             r.setex(ip, 86400, int_to_bytes(attempts))
             bottle.response.status = 429
             if bottle.request.method == 'GET':
                 return bottle.template('error.html', generic_message=generic_message, message=message)
             else:
-                return {'status':'Failure', 'error':[generic_message]}
+                return {'status': 'Failure', 'error': [generic_message]}
         return fn(*args, **kwargs)
     return _wrap
 
 
 def bytes_to_int(b):
-    return (int.from_bytes(b, "big"))
+    """
+    Convert bytes to an integer.
+    """
+    return int.from_bytes(b, "big")
 
 
 def int_to_bytes(i):
-    return (bytes([i]))
+    """
+    Convert an integer to bytes.
+    """
+    return bytes([i])
 
 
 def connect(db=settings.db):
+    """
+    Connect to the Redis database.
+    """
     return redis.StrictRedis(settings.redis_host, port=settings.redis_port, db=db, password=settings.redis_pass)
 
 
 def update_redis(key, message, ttl=3600):
-  r = connect()
-  h = r.setex(key, ttl, message)
-  return h
+    """
+    Store a message in Redis with the specified key and time-to-live (TTL).
+    """
+    r = connect()
+    h = r.setex(key, ttl, message)
+    return h
 
 
 def generate_key():
+    """
+    Generate a unique key for storing messages.
+    """
     return hashlib.sha256(f'{str(uuid.uuid4())} - {str(time.time())}'.encode()).hexdigest()
 
 
 def validate_message(message):
+    """
+    Validate the message to ensure it doesn't contain any prohibited characters.
+    """
     if any(c in settings.bad_chars for c in message):
         return False
     return True
 
 
 def validate_link(link):
+    """
+    Validate the link to ensure it is in the correct format and length.
+    """
     if link in ['hello']:
         return True
     if len(link) != 64:
@@ -90,12 +116,16 @@ def validate_link(link):
 @bottle.route("/:why")
 @rate
 def catchall(why):
+    """
+    Route handler for any request with a path parameter.
+    This function returns an error message indicating that the request bypassed the WAF (Web Application Firewall).
+    """
     generic_message = 'Ops'
     message = f'''
-If you got here you have successfully by bassed the WAF (If implemented).
-Please contact the system owner and inform them that "{why}" casued this to happend
+If you got here you have successfully bypassed the WAF (if implemented).
+Please contact the system owner and inform them that "{why}" caused this to happen.
 
-If you feel like no external WAF is implemented please stop FUZZing the application.
+If you feel like no external WAF is implemented, please stop fuzzing the application.
 '''
     bottle.response.status = 400
     return bottle.template('error.html', generic_message=generic_message, message=message)
@@ -104,42 +134,51 @@ If you feel like no external WAF is implemented please stop FUZZing the applicat
 @bottle.post('/')
 @rate
 def add_message():
+    """
+    Route handler for adding a new message.
+    This function expects a JSON payload containing the message and stores it in Redis with a generated key.
+    It returns the generated link for accessing the message.
+    """
     try:
         byte = bottle.request.body
         data = json.loads(byte.read().decode('UTF-8'))
         message = data['message']
     except:
         bottle.response.status = 400
-        return {'status':'Failure', 'error':['Wrong input parameters']}
+        return {'status': 'Failure', 'error': ['Wrong input parameters']}
     if not validate_message(message):
         bottle.response.status = 400
-        return {'status':'Failure', 'error':['Bad charachters in payload']}
+        return {'status': 'Failure', 'error': ['Bad characters in payload']}
     try:
         r = connect()
     except:
         bottle.response.status = 500
-        return {'status':'Failure', 'error':['There was a problem communicating with the database']}
+        return {'status': 'Failure', 'error': ['There was a problem communicating with the database']}
     key = generate_key()
     if update_redis(key, message):
         bottle.response.status = 200
-        return {'status':'Success', 'message':{'link':f'{settings.uri}/?link={key}', 'key':key}}
+        return {'status': 'Success', 'message': {'link': f'{settings.uri}/?link={key}', 'key': key}}
     else:
         bottle.response.status = 500
-        return {'status':'Failure', 'error':['Failed to store message in database']}
+        return {'status': 'Failure', 'error': ['Failed to store message in database']}
 
 
 @bottle.get('/')
 @rate
 def display_message():
+    """
+    Route handler for displaying a message.
+    This function retrieves the message from Redis based on the provided link, deletes it from Redis, and displays the message.
+    """
     generic_message = 'Welcome'
     message = f'''
-This is a one time message delivery application.
-You can generate your own secret message by making a POST request to this url.
-In the request body submit a valid json containing the message.
+This is a one-time message delivery application.
+You can generate your own secret message by making a POST request to this URL.
+In the request body, submit a valid JSON containing the message.
 Eg:
     curl -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri}
 
-You will recive you unique link in the response body.
+You will receive your unique link in the response body.
 
 Eg:
     curl -s -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri} | jq
@@ -152,11 +191,11 @@ Eg:
     }}
 
 Disclaimer:
-This is a proof of concept app that was created to help define a requirement.
-It is NOT intendet for production use!
+This is a proof-of-concept app that was created to help define a requirement.
+It is NOT intended for production use!
 
-Causion:
-There is a rate-limiter in place.
+Caution:
+There is a rate limiter in place.
     '''
     link = bottle.request.query.link
     if not link:
@@ -186,8 +225,8 @@ There is a rate-limiter in place.
     except:
         generic_message = 'Failed to delete message'
         message = f'''
-Since the message was not deleted we will not send it.
-If the error persist please contact the system owner.
+Since the message was not deleted, we will not send it.
+If the error persists, please contact the system owner.
 
 Time left before your message expires: {ttl}
         '''
@@ -199,4 +238,8 @@ Time left before your message expires: {ttl}
 
 
 if __name__ == '__main__':
+    """
+    Start the Bottle server when the script is executed directly.
+    """
     bottle.run(host='0.0.0.0', port=8080, debug=False, reloader=True)
+
