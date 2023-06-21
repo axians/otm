@@ -1,2 +1,2 @@
-bottle==0.12.19
-redis==3.5.3
+bottle==0.12.20
+redis==4.3.6
