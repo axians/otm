@@ -18,14 +18,14 @@ def rate(fn):
     It checks the number of attempts made by the client within a certain time period and blocks further requests if the limit is exceeded.
     """
     def _wrap(*args, **kwargs):
+        generic_message = 'Error.'
         ip = bottle.request.environ.get(settings.http_ip_field)
         try:
             r = connect(settings.ratelimit_db)
         except:
-            generic_message = 'There was a problem communicating with the database.'
             bottle.response.status = 500
             if bottle.request.method == 'GET':
-                return bottle.template('error.html', generic_message=generic_message, message=False)
+                return bottle.template('index.html', generic_message=generic_message, message='There was a problem communicating with the database', company=settings.company)
             else:
                 return {'status': 'Failure', 'error': [generic_message]}
         try:
@@ -33,10 +33,9 @@ def rate(fn):
             if not attempts:
                 attempts = bytes([0])
         except:
-            generic_message = 'There was a problem '
             bottle.response.status = 500
             if bottle.request.method == 'GET':
-                return bottle.template('error.html', generic_message=generic_message, message=False)
+                return bottle.template('index.html', generic_message=generic_message, message='The ratelimit function is not working as expected', company=settings.company)
             else:
                 return {'status': 'Failure', 'error': [generic_message]}
         attempts = bytes_to_int(attempts)
@@ -48,7 +47,7 @@ def rate(fn):
             r.setex(ip, 86400, int_to_bytes(attempts))
             bottle.response.status = 429
             if bottle.request.method == 'GET':
-                return bottle.template('error.html', generic_message=generic_message, message=message)
+                return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
             else:
                 return {'status': 'Failure', 'error': [generic_message]}
         return fn(*args, **kwargs)
@@ -210,26 +209,28 @@ def display_message():
     link = bottle.request.query.link
     if not link:
         bottle.response.status = 200
-        return bottle.template('index.html', generic_message=generic_message, message=message)
+        return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
     if not validate_link(link):
-        generic_message = 'The link you have provided is not valid.'
+        generic_message = 'Bad link.'
         bottle.response.status = 400
-        return bottle.template('error.html', generic_message=generic_message, message=False)
+        return bottle.template('index.html', generic_message=generic_message, message='The link you have provided is not valid', company=settings.company)
     try:
         r = connect()
     except:
-        generic_message = 'There was a problem communicating with the database.'
+        generic_message = 'Error'
         bottle.response.status = 500
-        return bottle.template('error.html', generic_message=generic_message, message=False)
+        return bottle.template('index.html', generic_message=generic_message, message='There was a problem communicating with the database.')
     message = r.get(link)
     ttl = r.ttl(link)
     if not message:
-        generic_message = 'No message found on that link'
+        generic_message = 'Message not found'
+        message = 'No message found on that link'
         bottle.response.status = 200
-        return bottle.template('index.html', generic_message=generic_message, message=message)
+        return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
     if link in ['hello']:
         bottle.response.status = 200
-        return bottle.template('message.html', generic_message=generic_message, message=message)
+        generic_message = 'This message has been deleted and will not be visible again'
+        return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
     try:
         r.delete(link)
     except:
@@ -243,10 +244,10 @@ def display_message():
                         '''
                         )
         bottle.response.status = 500
-        return bottle.template('error.html', generic_message=generic_message, message=message)
+        return bottle.template('index.html', generic_message=generic_message, message=message)
     generic_message = 'This message has been deleted and will not be visible again'
     bottle.response.status = 200
-    return bottle.template('message.html', generic_message=generic_message, message=message)
+    return bottle.template('message.html', generic_message=generic_message, message=message, company=settings.company)
 
 
 if __name__ == '__main__':
