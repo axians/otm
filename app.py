@@ -113,22 +113,9 @@ def validate_link(link):
     return True
 
 
-@bottle.route("/:why")
-@rate
-def catchall(why):
-    """
-    Route handler for any request with a path parameter.
-    This function returns an error message indicating that the request bypassed the WAF (Web Application Firewall).
-    """
-    generic_message = 'Ops'
-    message = f'''
-If you got here you have successfully bypassed the WAF (if implemented).
-Please contact the system owner and inform them that "{why}" caused this to happen.
-
-If you feel like no external WAF is implemented, please stop fuzzing the application.
-'''
-    bottle.response.status = 400
-    return bottle.template('error.html', generic_message=generic_message, message=message)
+@bottle.get("/static/img/<filepath:re:.*\.(jpg|png|gif|ico|svg)>")
+def img(filepath):
+    return bottle.static_file(filepath, root="static/img")
 
 
 @bottle.post('/')
