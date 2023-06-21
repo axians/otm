@@ -1,8 +1,8 @@
-redis_auth = ''
-redis_host = ''
-redis_port = ''
-db = ''
-ratelimit_db = ''
-uri = ''
-http_ip_field = ''
-bad_chars = []
+redis_pass = ''     # The password for the redis server
+redis_host = ''     # The ip address of the redis server
+redis_port = ''     # The port for the redis database
+db = ''             # The index where the messages is stored
+ratelimit_db = ''   # The index for the ratelimit data
+uri = ''            # Example: https://my_company.tld
+http_ip_field = ''  # The http header to be used for ratelimiting, eg REMOTE_ADDR
+bad_chars = []      # An array of chars to disallow
