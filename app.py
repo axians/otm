@@ -111,6 +111,10 @@ def add_message():
     except:
         bottle.response.status = 400
         return {'status':'Failure', 'error':['Wrong input parameters']}
+    try:
+        ttl = data['ttl']
+    except:
+        ttl = 3600
     if not validate_message(message):
         bottle.response.status = 400
         return {'status':'Failure', 'error':['Bad charachters in payload']}
@@ -120,7 +124,7 @@ def add_message():
         bottle.response.status = 500
         return {'status':'Failure', 'error':['There was a problem communicating with the database']}
     key = generate_key()
-    if update_redis(key, message):
+    if update_redis(key, message, ttl):
         bottle.response.status = 200
         return {'status':'Success', 'message':{'link':f'{settings.uri}/?link={key}', 'key':key}}
     else:
@@ -142,7 +146,7 @@ Eg:
 You will recive you unique link in the response body.
 
 Eg:
-    curl -s -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri} | jq
+    curl -s -XPOST -d '{{"message":"This is your secret message!", "ttl":3600}}' {settings.uri} | jq
     {{
       "status": "Success",
       "message": {{
@@ -199,4 +203,4 @@ Time left before your message expires: {ttl}
 
 
 if __name__ == '__main__':
-    bottle.run(host='0.0.0.0', port=8080, debug=False, reloader=True)
+    bottle.run(host='127.0.0.1', port=8080, debug=False, reloader=True)
