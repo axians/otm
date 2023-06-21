@@ -7,6 +7,7 @@ import time
 import hashlib
 import uuid
 import string
+import textwrap
 
 app = application = bottle.default_app()
 
@@ -175,32 +176,37 @@ def display_message():
     This function retrieves the message from Redis based on the provided link, deletes it from Redis, and displays the message.
     """
     generic_message = 'Welcome'
-    message = f'''
-This is a one-time message delivery application.
-You can generate your own secret message by making a POST request to this URL.
-In the request body, submit a valid JSON containing the message.
-Eg:
-    curl -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri}
+    message = textwrap.dedent(
+            f'''\
+                    This is a one-time message delivery application.
+                    You can generate your own secret message by making a POST request to this URL.
+                    In the request body, submit a valid JSON containing the message.
+                    Eg:
+                    curl -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri}
 
-You will receive your unique link in the response body.
+                    You can also specify a time-to-live (TTL) value in seconds. (If no TTL is specified, the message will expire in 1 hour.)
+                    curl -XPOST -d '{{"message":"This is your secret message!","ttl":600}}' {settings.uri}
 
-Eg:
-    curl -s -XPOST -d '{{"message":"This is your secret message!", "ttl":3600}}' {settings.uri} | jq
-    {{
-      "status": "Success",
-      "message": {{
-        "link": "{settings.uri}?link=3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41",
-        "key": "3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41"
-      }} 
-    }}
+                    You will receive your unique link in the response body.
 
-Disclaimer:
-This is a proof-of-concept app that was created to help define a requirement.
-It is NOT intended for production use!
+                    Eg:
+                    curl -s -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri} | jq
+                    {{
+                        "status": "Success",
+                        "message": {{
+                            "link": "{settings.uri}?link=3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41",
+                            "key": "3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41"
+                            }} 
+                        }}
 
-Caution:
-There is a rate limiter in place.
-    '''
+                    Disclaimer:
+                    This is a proof-of-concept app that was created to help define a requirement.
+                    It is NOT intended for production use!
+
+                    Caution:
+                    There is a rate limiter in place.
+                    '''
+                    )
     link = bottle.request.query.link
     if not link:
         bottle.response.status = 200
@@ -228,12 +234,14 @@ There is a rate limiter in place.
         r.delete(link)
     except:
         generic_message = 'Failed to delete message'
-        message = f'''
-Since the message was not deleted, we will not send it.
-If the error persists, please contact the system owner.
+        message = textwrap.dedent(
+                f'''\
+                        Since the message was not deleted, we will not send it.
+                        If the error persists, please contact the system owner.
 
-Time left before your message expires: {ttl}
-        '''
+                        Time left before your message expires: {ttl}
+                        '''
+                        )
         bottle.response.status = 500
         return bottle.template('error.html', generic_message=generic_message, message=message)
     generic_message = 'This message has been deleted and will not be visible again'
