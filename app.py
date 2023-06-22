@@ -113,6 +113,11 @@ def validate_link(link):
     return True
 
 
+@bottle.get("/static/fonts/<filepath:re:.*\.(otf|ttf)>")
+def img(filepath):
+    return bottle.static_file(filepath, root="static/fonts")
+
+
 @bottle.get("/static/img/<filepath:re:.*\.(jpg|png|gif|ico|svg)>")
 def img(filepath):
     return bottle.static_file(filepath, root="static/img")
