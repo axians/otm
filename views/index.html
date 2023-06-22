@@ -1,18 +1,16 @@
 % include('header.tpl', title='OTM - Index')
 <!-- <a class="github-fork-ribbon" href="https://github.com/gbyx3/otm" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a> -->
 <div class="top_container">
-<h3>{{generic_message}}</h3>
+    <h3>{{generic_message}}</h3>
 </div>
-% if message:
 <div class="outer_container">
-<div class="logo_container">
-<img src="static/img/brand_logo.png" alt="Brand Logo" />
+<div class="logo_container logo_mask">
+    <img src="static/img/brand_logo.jpg" alt="Brand Logo"/>
 </div>
 <div class="container">
-<pre>{{message}}</pre>
+    <pre>{{message}}</pre>
 </div>
 </div>
 <div class="footer">
     <p>{{company}}</p>
 </div>
-% end 
