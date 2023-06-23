@@ -32,13 +32,15 @@ body {
    border-radius: 2rem;
    min-width: 750px;
    min-height: 400px;
+   position: relative;
+   top: -660px;
 }
 .logo_container {
    z-index: -1;
    display: block;
-   position: fixed;
-   top: 120px;
-   left: 400px;
+   position: relative;
+   top: 78px;
+   left: -225px;
 }
 .outer_container {
    width: 100%;
@@ -58,7 +60,7 @@ body {
    background-color: lightgray;
 }  
 .footer {
-   position: absolute;
+   position: fixed;
    bottom: 0;
    width: 100%;
    text-align: center;
