@@ -244,7 +244,7 @@ def display_message():
         return bottle.template('index.html', generic_message=generic_message, message=message)
     generic_message = 'This message has been deleted and will not be visible again'
     bottle.response.status = 200
-    return bottle.template('message.html', generic_message=generic_message, message=message, company=settings.company)
+    return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
 
 
 if __name__ == '__main__':
