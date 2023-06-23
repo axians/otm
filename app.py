@@ -251,4 +251,9 @@ if __name__ == '__main__':
     """
     Start the Bottle server when the script is executed directly.
     """
-    bottle.run(host='0.0.0.0', port=8080, debug=False, reloader=True)
+    try:
+        port = int(sys.argv[1])
+    except:
+        port = 8080
+
+    bottle.run(host='0.0.0.0', port=port, debug=False, reloader=True)
