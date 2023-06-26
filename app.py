@@ -8,6 +8,7 @@ import hashlib
 import uuid
 import string
 import textwrap
+import sys
 
 app = application = bottle.default_app()
 
