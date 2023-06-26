@@ -128,6 +128,11 @@ def img(filepath):
     return bottle.static_file(filepath, root="static/img")
 
 
+@bottle.get("/static/script/<filepath:re:.*\.(js)>")
+def script(filepath):
+    return bottle.static_file(filepath, root="static/script")
+
+
 @bottle.post('/')
 @rate
 def add_message():
