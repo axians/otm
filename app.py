@@ -197,7 +197,7 @@ def display_message():
                         "message": {{
                             "link": "{settings.uri}?link=3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41",
                             "key": "3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41"
-                            }} 
+                            }}
                         }}
 
                     Disclaimer:
@@ -208,10 +208,39 @@ def display_message():
                     There is a rate limiter in place.
                     '''
                     )
+    message = textwrap.dedent(
+            f'''\
+                    This is a one-time message delivery application.
+                    You can generate your own secret message by making a POST request to this URL.
+                    In the request body, submit a valid JSON containing the message.
+                    Eg:
+                    curl -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri}
+
+                    You will receive your unique link in the response body.
+
+                    Eg:
+                    curl -s -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri} | jq
+                    {{
+                        "status": "Success",
+                        "message": {{
+                            "link": "{settings.uri}?link=3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41",
+                            "key": "3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41"
+                            }}
+                        }}
+
+                    Or submitting a message via the form below.
+
+
+                    Caution:
+                    There is a rate limiter in place.
+
+
+                    '''
+                    )
     link = bottle.request.query.link
     if not link:
         bottle.response.status = 200
-        return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
+        return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company, submit=True)
     if not validate_link(link):
         generic_message = 'Bad link.'
         bottle.response.status = 400
@@ -221,7 +250,7 @@ def display_message():
     except:
         generic_message = 'Error'
         bottle.response.status = 500
-        return bottle.template('index.html', generic_message=generic_message, message='There was a problem communicating with the database.')
+        return bottle.template('index.html', generic_message=generic_message, message='There was a problem communicating with the database.', company=settings.company)
     message = r.get(link)
     ttl = r.ttl(link)
     if not message:
