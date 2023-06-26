@@ -8,11 +8,34 @@ body {
    padding: 0;
    font-family: brand-font, Arial, sans-serif;
 }
+a {
+   text-decoration: none;
+   color: black;
+}
 .logo_mask {
   -webkit-mask-image: url('/static/img/mask.png');
   mask-image: url('/static/img/mask.png');
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;    
+}
+.top_menu_container {
+    display: flex;
+    justify-content: center;
+}
+.top_menu {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+     /* background-color: rgba(255, 255, 255, 0.9); */
+    box-shadow: 0px 14px 55px 5px rgba(0,0,0,0.1);
+    position: fixed;
+    top: 0;
+    width: 48%;
+    z-index: 1;
 }
 .top_container {
     display: flex;
@@ -31,7 +54,7 @@ body {
    padding-top: 20px;
    border-radius: 2rem;
    min-width: 750px;
-   min-height: 400px;
+   min-height: 500px;
    position: relative;
    top: -660px;
 }
