@@ -12,6 +12,16 @@ a {
    text-decoration: none;
    color: black;
 }
+.clip_button {
+    border: none;
+    color: #87888A;
+    background-color: transparent;
+}
+.clip_button:hover {
+    border: none;
+    color: #95C11F;
+    background-color: transparent;
+}
 .logo_mask {
   -webkit-mask-image: url('/static/img/mask.png');
   mask-image: url('/static/img/mask.png');
