@@ -12,6 +12,33 @@ a {
    text-decoration: none;
    color: black;
 }
+.input_container {
+   display: flex;
+   flex-direction: row;
+   justify-content: space-between;
+   align-items: center;
+   margin-bottom: 10px;
+   width: 100%;
+}
+.input_button {
+   border: none;
+   border-radius: 5px;
+   padding: 10px;
+   font-weight: bold;
+   color: white;
+   background-color: #95C11F;
+   cursor: pointer;
+}
+.input_field {
+   border: none;
+   border-radius: 5px;
+   padding: 10px;
+   font-weight: bold;
+   color: black;
+   background-color: lightgray;
+   width: 75%;
+   height: 17px;
+}
 .clip_button {
     border: none;
     color: #87888A;
