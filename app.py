@@ -10,6 +10,7 @@ import string
 import textwrap
 import sys
 from cryptography.fernet import Fernet
+import base64
 
 app = application = bottle.default_app()
 
@@ -74,21 +75,18 @@ def encrypt(message, salt=settings.salt):
     """
     Encrypt a message using the provided key.
     """
-    key = hashlib.sha256(hashlib.sha256(salt.encode()).hexdigest())
+    key = base64.urlsafe_b64encode(salt.encode())
     f = Fernet(key)
-    enc_message = f.encrypt(message.encode())
-    return enc_message
+    return f.encrypt(message.encode())
 
 
 def decrypt(message, salt=settings.salt):
     """
     Decrypt a message using the provided key.
     """
-    key = hashlib.sha256(hashlib.sha256(salt.encode()).hexdigest())
+    key = base64.urlsafe_b64encode(salt.encode())
     f = Fernet(key)
-    dec_message = f.decrypt(message.encode())
-    return dec_message
-
+    return f.decrypt(message.decode())
 
 
 def connect(db=settings.db):
@@ -184,7 +182,7 @@ def add_message():
         bottle.response.status = 500
         return {'status': 'Failure', 'error': ['There was a problem communicating with the database']}
     key = generate_key()
-    if update_redis(key, message, ttl):
+    if update_redis(key, encrypt(message), ttl):
         bottle.response.status = 200
         return {'status': 'Success', 'message': {'link': f'{settings.uri}/?link={key}', 'key': key}}
     else:
@@ -301,7 +299,7 @@ def display_message():
         return bottle.template('index.html', generic_message=generic_message, message=message)
     generic_message = 'This message has been deleted and will not be visible again'
     bottle.response.status = 200
-    return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
+    return bottle.template('index.html', generic_message=generic_message, message=decrypt(message), company=settings.company)
 
 
 if __name__ == '__main__':
