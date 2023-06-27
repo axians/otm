@@ -9,6 +9,7 @@ import uuid
 import string
 import textwrap
 import sys
+from cryptography.fernet import Fernet
 
 app = application = bottle.default_app()
 
@@ -67,6 +68,27 @@ def int_to_bytes(i):
     Convert an integer to bytes.
     """
     return bytes([i])
+
+
+def encrypt(message, salt=settings.salt):
+    """
+    Encrypt a message using the provided key.
+    """
+    key = hashlib.sha256(hashlib.sha256(salt.encode()).hexdigest())
+    f = Fernet(key)
+    enc_message = f.encrypt(message.encode())
+    return enc_message
+
+
+def decrypt(message, salt=settings.salt):
+    """
+    Decrypt a message using the provided key.
+    """
+    key = hashlib.sha256(hashlib.sha256(salt.encode()).hexdigest())
+    f = Fernet(key)
+    dec_message = f.decrypt(message.encode())
+    return dec_message
+
 
 
 def connect(db=settings.db):
