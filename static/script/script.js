@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
-    var submitButton = document.getElementById("submit_button");
-    var copyButton = document.getElementById("copy_button");
-    var messageInput = document.getElementById("message_input");
-    var saltInput = document.getElementById("salt_input");
+    var submitButton = document.getElementById("submit-button");
+    var copyButton = document.getElementById("copy-button");
+    var messageInput = document.getElementById("message-input");
+    var saltInput = document.getElementById("salt-input");
     var linkElement = document.getElementById("link");
 
     submitButton.addEventListener("click", submitMessage);
