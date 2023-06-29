@@ -1,30 +1,29 @@
 % include('header.tpl', title='OTM - Index')
 % setdefault('submit', False)
 <!-- <a class="github-fork-ribbon" href="https://github.com/gbyx3/otm" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a> -->
-<div class="top_container">
+<div class="top-container">
     <h3>{{generic_message}}</h3>
 </div>
-<div class="outer_container">
-    <div class="logo_container logo_mask">
+<div class="outer-container">
+    <div class="logo-container logo-mask">
         <img src="static/img/brand_logo.jpg" alt="Brand Logo"/>
     </div>
     <div class="container">
         <pre>{{message}}</pre>
         % if submit:
-        <div class="submit_message">
-            <div class="input_container">
-                <textarea class="input_field" id="message_input" type="text" placeholder="Enter your message here"></textarea>
-                <button class="input_button" id="submit_button" type="button">Submit</button>
+        <div class="submit-message">
+            <div class="input-container">
+                <textarea class="input-field" id="message-input" type="text" placeholder="Enter your message here"></textarea>
+                <button class="input-button" id="submit-button" type="button">Submit</button>
             </div>
-            <div class="input_container space_start">
-                <input class="input_field small" id="salt_input" type="text" placeholder="Salt"/>
-                <button id="info_button" class="clip_button" ><i class="fas fa-info-circle"></i></button>
-                <div id="i_c" class="info_container">Salt is optional, if no salt is specified a default will be used</div>
+            <div class="input-container space-start">
+                <input class="input-field small" id="salt-input" type="text" placeholder="Salt"/>
+                <button class="hover-target" ><i class="fas fa-info-circle"></i></button>
+                <div class="hover-popup">Salt is optional, if no salt is specified a default will be used</div>
             </div>
             <div>
                 <a href="#" id="link" style="pointer-events:none;"></a>
-                <button id="copy_button" class="clip_button" hidden="true"><i class="fas fa-clipboard"></i></button>
-                <!--<button id="copy_button" type="button" hidden="true" >copy</button>-->
+                <button id="copy-button" class="clip-button" hidden="true"><i class="fas fa-clipboard"></i></button>
             </div>
         </div>
         % end

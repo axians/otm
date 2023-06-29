@@ -4,15 +4,6 @@ document.addEventListener("DOMContentLoaded", function () {
     var messageInput = document.getElementById("message_input");
     var saltInput = document.getElementById("salt_input");
     var linkElement = document.getElementById("link");
-    var infoButton = document.getElementById("info_button");
-    var infoContainer = document.getElementById("i_c");
-
-    infoButton.addEventListener("mouseout", function () {
-        infoContainer.style.display = "none";
-    });
-    infoButton.addEventListener("mouseover", function () {
-        infoContainer.style.display = "block";
-    });
 
     submitButton.addEventListener("click", submitMessage);
     copyButton.addEventListener("click", copyToClipboard);
@@ -50,7 +41,6 @@ document.addEventListener("DOMContentLoaded", function () {
         navigator.clipboard.writeText(linkElement.href)
             .then(() => {
                 copyButton.innerHTML = "Copied!";
-                //alert("Copied to clipboard!");
             })
             .catch((error) => {
                 console.error("Error:", error);
