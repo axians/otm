@@ -13,8 +13,13 @@
         % if submit:
         <div class="submit_message">
             <div class="input_container">
-                <textarea class="input_field" id="message_input" type="text" placeholder="Enter your message here"/></textarea>
+                <textarea class="input_field" id="message_input" type="text" placeholder="Enter your message here"></textarea>
                 <button class="input_button" id="submit_button" type="button">Submit</button>
+            </div>
+            <div class="input_container space_start">
+                <input class="input_field small" id="salt_input" type="text" placeholder="Salt"/>
+                <button id="info_button" class="clip_button" ><i class="fas fa-info-circle"></i></button>
+                <div id="i_c" class="info_container">Salt is optional, if no salt is specified a default will be used</div>
             </div>
             <div>
                 <a href="#" id="link" style="pointer-events:none;"></a>
