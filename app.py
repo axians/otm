@@ -85,7 +85,10 @@ def decrypt(message, salt=settings.salt):
     Decrypt a message using the provided key.
     """
     key = base64.urlsafe_b64encode(salt.encode())
-    f = Fernet(key)
+    try:
+        f = Fernet(key)
+    except ValueError:
+        return False
     return f.decrypt(message.decode())
 
 
@@ -116,6 +119,8 @@ def validate_message(message):
     """
     Validate the message to ensure it doesn't contain any prohibited characters.
     """
+    if not message:
+        return False
     if any(c in settings.bad_chars for c in message):
         return False
     return True
@@ -164,27 +169,45 @@ def add_message():
     """
     try:
         byte = bottle.request.body
-        data = json.loads(byte.read().decode('UTF-8'))
-        message = data['message']
+        request_body = json.loads(byte.read().decode('UTF-8'))
+        message = request_body['message']
     except:
         bottle.response.status = 400
         return {'status': 'Failure', 'error': ['Wrong input parameters']}
+
+    display_salt = False
+    salt = settings.salt
+    if 'salt' in request_body:
+        if request_body['salt']:
+            display_salt = True
+            salt = hashlib.sha256(request_body['salt'].encode()).hexdigest()[:32]
+
     try:
-        ttl = data['ttl']
+        ttl = request_body['ttl']
     except:
         ttl = 3600
+
     if not validate_message(message):
         bottle.response.status = 400
         return {'status': 'Failure', 'error': ['Bad characters in payload']}
+
     try:
         r = connect()
     except:
         bottle.response.status = 500
         return {'status': 'Failure', 'error': ['There was a problem communicating with the database']}
+
     key = generate_key()
-    if update_redis(key, encrypt(message), ttl):
+    encrypted_message = encrypt(message, salt)
+
+
+    if update_redis(key, encrypted_message, ttl):
         bottle.response.status = 200
-        return {'status': 'Success', 'message': {'link': f'{settings.uri}/?link={key}', 'key': key}}
+        if display_salt:
+            link = f'{settings.uri}/?link={key}&salt={salt}'
+        else:
+            link = f'{settings.uri}/?link={key}'
+        return {'status': 'Success', 'message': {'link': link, 'key': key}}
     else:
         bottle.response.status = 500
         return {'status': 'Failure', 'error': ['Failed to store message in database']}
@@ -198,37 +221,6 @@ def display_message():
     This function retrieves the message from Redis based on the provided link, deletes it from Redis, and displays the message.
     """
     generic_message = 'Welcome'
-    message = textwrap.dedent(
-            f'''\
-                    This is a one-time message delivery application.
-                    You can generate your own secret message by making a POST request to this URL.
-                    In the request body, submit a valid JSON containing the message.
-                    Eg:
-                    curl -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri}
-
-                    You can also specify a time-to-live (TTL) value in seconds. (If no TTL is specified, the message will expire in 1 hour.)
-                    curl -XPOST -d '{{"message":"This is your secret message!","ttl":600}}' {settings.uri}
-
-                    You will receive your unique link in the response body.
-
-                    Eg:
-                    curl -s -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri} | jq
-                    {{
-                        "status": "Success",
-                        "message": {{
-                            "link": "{settings.uri}?link=3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41",
-                            "key": "3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41"
-                            }}
-                        }}
-
-                    Disclaimer:
-                    This is a proof-of-concept app that was created to help define a requirement.
-                    It is NOT intended for production use!
-
-                    Caution:
-                    There is a rate limiter in place.
-                    '''
-                    )
     message = textwrap.dedent(
             f'''\
                     This is a one-time message delivery application.
@@ -259,30 +251,54 @@ def display_message():
                     '''
                     )
     link = bottle.request.query.link
+    try:
+        salt = bottle.request.query.salt
+        if not salt:
+        # Check if salt is empty string
+            salt = settings.salt
+    except:
+        salt = settings.salt
+
     if not link:
         bottle.response.status = 200
         return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company, submit=True)
+
     if not validate_link(link):
         generic_message = 'Bad link.'
         bottle.response.status = 400
         return bottle.template('index.html', generic_message=generic_message, message='The link you have provided is not valid', company=settings.company)
+
     try:
         r = connect()
     except:
         generic_message = 'Error'
         bottle.response.status = 500
         return bottle.template('index.html', generic_message=generic_message, message='There was a problem communicating with the database.', company=settings.company)
+
     message = r.get(link)
     ttl = r.ttl(link)
+
     if not message:
         generic_message = 'Message not found'
         message = 'No message found on that link'
         bottle.response.status = 200
         return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
+
     if link in ['hello']:
         bottle.response.status = 200
         generic_message = 'This message has been deleted and will not be visible again'
         return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
+
+    if salt:
+        decrypted_message = decrypt(message, salt=salt)
+    else:
+        decrypted_message = decrypt(message)
+
+    if not decrypted_message:
+        generic_message = 'Bad link.'
+        bottle.response.status = 403
+        return bottle.template('index.html', generic_message=generic_message, message='The link you have provided is not valid', company=settings.company)
+
     try:
         r.delete(link)
     except:
@@ -297,9 +313,10 @@ def display_message():
                         )
         bottle.response.status = 500
         return bottle.template('index.html', generic_message=generic_message, message=message)
+
     generic_message = 'This message has been deleted and will not be visible again'
     bottle.response.status = 200
-    return bottle.template('index.html', generic_message=generic_message, message=decrypt(message), company=settings.company)
+    return bottle.template('index.html', generic_message=generic_message, message=decrypted_message, company=settings.company)
 
 
 if __name__ == '__main__':
