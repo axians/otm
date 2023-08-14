@@ -175,6 +175,10 @@ def add_message():
         bottle.response.status = 400
         return {'status': 'Failure', 'error': ['Wrong input parameters']}
 
+    if not validate_message(message):
+        bottle.response.status = 400
+        return {'status': 'Failure', 'error': ['Bad characters in payload']}
+
     display_salt = False
     salt = settings.salt
     if 'salt' in request_body:
@@ -182,14 +186,10 @@ def add_message():
             display_salt = True
             salt = hashlib.sha256(request_body['salt'].encode()).hexdigest()[:32]
 
-    try:
-        ttl = request_body['ttl']
-    except:
-        ttl = 3600
-
-    if not validate_message(message):
-        bottle.response.status = 400
-        return {'status': 'Failure', 'error': ['Bad characters in payload']}
+    ttl = 3600
+    if 'ttl' in request_body:
+        if request_body['ttl']:
+            ttl = request_body['ttl']
 
     try:
         r = connect()
