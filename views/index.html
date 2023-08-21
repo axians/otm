@@ -12,12 +12,18 @@
         <pre>{{message}}</pre>
         % if submit:
         <div class="submit-message">
+            <div class="input-header">
+                <span>Enter your message here</span>
+            </div>
             <div class="input-container">
                 <textarea class="input-field" id="message-input" type="text" placeholder="Enter your message here"></textarea>
                 <button class="input-button" id="submit-button" type="button">Submit</button>
             </div>
+            <div class="input-header optional">
+                <span>Optional</span>
+            </div>
             <div class="input-container space-start">
-                <input class="input-field small" id="salt-input" type="text" placeholder="Salt"/>
+                <input class="input-field small" id="salt-input" type="text" value="{{salt}}"/>
                 <button class="hover-target" ><i class="fas fa-info-circle"></i></button>
                 <div class="hover-popup">Salt is optional, if no salt is specified a default will be used</div>
             </div>

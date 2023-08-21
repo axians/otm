@@ -1,4 +1,5 @@
 import bottle
+import requests
 import redis
 import settings
 import logging
@@ -139,6 +140,10 @@ def validate_link(link):
     return True
 
 
+def generate_salt():
+    return requests.get("https://en.wikipedia.org/wiki/Special:Random").url.split("/")[-1].replace("_","")
+
+
 @bottle.get("/static/style/<filepath:re:.*\.(css)>")
 def style(filepath):
     return bottle.static_file(filepath, root="static/style")
@@ -260,10 +265,16 @@ def display_message():
         salt = settings.salt
 
     if not link:
+        """
+        If no link is provided, display the welcome message.
+        """
         bottle.response.status = 200
-        return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company, submit=True)
+        return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company, submit=True, salt=generate_salt())
 
     if not validate_link(link):
+        """
+        If the link is not valid, display an error message.
+        """
         generic_message = 'Bad link.'
         bottle.response.status = 400
         return bottle.template('index.html', generic_message=generic_message, message='The link you have provided is not valid', company=settings.company)
@@ -271,6 +282,9 @@ def display_message():
     try:
         r = connect()
     except:
+        """
+        If there is a problem connecting to Redis, display an error message.
+        """
         generic_message = 'Error'
         bottle.response.status = 500
         return bottle.template('index.html', generic_message=generic_message, message='There was a problem communicating with the database.', company=settings.company)
@@ -279,12 +293,18 @@ def display_message():
     ttl = r.ttl(link)
 
     if not message:
+        """
+        If the message is not found, display an error message.
+        """
         generic_message = 'Message not found'
         message = 'No message found on that link'
         bottle.response.status = 200
         return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
 
     if link in ['hello']:
+        """
+        If the link is a reserved keyword, display an example message.
+        """
         bottle.response.status = 200
         generic_message = 'This message has been deleted and will not be visible again'
         return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
@@ -295,6 +315,9 @@ def display_message():
         decrypted_message = decrypt(message)
 
     if not decrypted_message:
+        """
+        If the message cannot be decrypted, display an error message.
+        """
         generic_message = 'Bad link.'
         bottle.response.status = 403
         return bottle.template('index.html', generic_message=generic_message, message='The link you have provided is not valid', company=settings.company)
@@ -302,6 +325,9 @@ def display_message():
     try:
         r.delete(link)
     except:
+        """
+        If the message cannot be deleted, display an error message.
+        """
         generic_message = 'Failed to delete message'
         message = textwrap.dedent(
                 f'''\
@@ -314,6 +340,9 @@ def display_message():
         bottle.response.status = 500
         return bottle.template('index.html', generic_message=generic_message, message=message)
 
+    """
+    If the message is successfully deleted, display the message.
+    """
     generic_message = 'This message has been deleted and will not be visible again'
     bottle.response.status = 200
     return bottle.template('index.html', generic_message=generic_message, message=decrypted_message, company=settings.company)
