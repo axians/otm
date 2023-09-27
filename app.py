@@ -16,6 +16,19 @@ import base64
 app = application = bottle.default_app()
 
 
+# decorator for checking id user-agent is allowed
+def check_user_agent(fn):
+    """
+    Decorator function that checks if the user agent is allowed.
+    """
+    def _wrap(*args, **kwargs):
+        if bottle.request.get_header('User-Agent') in settings.ignore_user_agents:
+            bottle.response.status = 403
+            return {'status': 'Failure', 'error': ['User-Agent not allowed']}
+        return fn(*args, **kwargs)
+    return _wrap
+
+
 def rate(fn):
     """
     Decorator function that implements rate limiting for requests based on the client's IP address.
