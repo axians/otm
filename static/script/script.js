@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var messageInput = document.getElementById("message-input");
     var saltInput = document.getElementById("salt-input");
     var linkElement = document.getElementById("link");
+    var initialButtonText = copyButton.innerHTML;
 
     submitButton.addEventListener("click", submitMessage);
     copyButton.addEventListener("click", copyToClipboard);
@@ -41,6 +42,9 @@ document.addEventListener("DOMContentLoaded", function () {
         navigator.clipboard.writeText(linkElement.href)
             .then(() => {
                 copyButton.innerHTML = "Copied!";
+                setTimeout(() => {
+                    copyButton.innerHTML = initialButtonText;
+                }, 5000);
             })
             .catch((error) => {
                 console.error("Error:", error);
