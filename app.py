@@ -1,3 +1,4 @@
+import re
 import bottle
 import requests
 import redis
@@ -154,7 +155,7 @@ def validate_link(link):
 
 
 def generate_salt():
-    return requests.get("https://en.wikipedia.org/wiki/Special:Random").url.split("/")[-1].replace("_","")
+    return re.sub("[^a-zA-Z0-9]", "", requests.get("https://en.wikipedia.org/wiki/Special:Random").url.split("/")[-1])
 
 
 @bottle.get("/static/style/<filepath:re:.*\.(css)>")
