@@ -12,12 +12,15 @@ a {
    text-decoration: none;
    color: black;
 }
+.input-container textarea {
+    width: 500px;
+}
 .input-container {
    display: flex;
    flex-direction: row;
    justify-content: space-between;
    align-items: center;
-   margin-bottom: 5px;
+   margin-bottom: 10px;
    width: 100%;
 }
 .input-button {
@@ -42,6 +45,7 @@ a {
 .small {
     width: 30%;
     margin-right: 5px;
+    color: #606060;
 }
 .space-start {
     justify-content: start;
@@ -76,6 +80,10 @@ a {
   mask-image: url('/static/img/mask.png');
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;    
+  background-image: url("/static/img/brand_logo.jpg");
+  width: 100%;
+  height: 100%;
+  background-position: -600px -130px; /* Adjust for your image*/
 }
 .top-menu-container {
     display: flex;
@@ -105,23 +113,27 @@ a {
     text-align: center;
     color: rgba(0, 0, 0, 0.9);
 }
+.link-container {
+   max-width: 750px;
+}
 .container {
    background-color: rgba(255, 255, 255, 0.9);
    box-shadow: 0px 14px 55px 5px rgba(0,0,0,0.1);
    padding: 35px;
    padding-top: 20px;
-   border-radius: 2rem;
+   border-radius: 15px;
    min-width: 750px;
    min-height: 550px;
-   position: relative;
+   /*position: relative;*/
    top: -660px;
 }
 .logo-container {
    z-index: -1;
    display: block;
-   position: relative;
-   top: 78px;
-   left: -225px;
+   position: fixed;
+   top: 40px;
+   left: -30px;
+   mask-size: 1300px;
 }
 .outer-container {
    width: 100%;
