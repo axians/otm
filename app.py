@@ -3,7 +3,7 @@ import bottle
 import requests
 import redis
 import settings
-import logging
+import logging.config
 import json
 import time
 import hashlib
@@ -14,6 +14,8 @@ import sys
 from cryptography.fernet import Fernet
 import base64
 
+logging.config.dictConfig(settings.log_config)
+logger = logging.getLogger(__name__)
 app = application = bottle.default_app()
 
 
@@ -60,6 +62,7 @@ def rate(fn):
             if not attempts:
                 attempts = bytes([0])
         except:
+            logger.exception("Failed to initialize ratelimit db")
             bottle.response.status = 500
             if bottle.request.method == 'GET':
                 return bottle.template('index.html', generic_message=generic_message, message='The ratelimit function is not working as expected', company=settings.company)
@@ -298,12 +301,17 @@ def display_message():
         bottle.response.status = 200
         return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company, submit=True, salt=generate_salt())
 
+    real_ip = bottle.request.get_header('X-Real-Ip')
+    user_agent = bottle.request.get_header('User-Agent')
+    logger.info(f"Connection from: {real_ip} - Using: {user_agent}")
+    link = bottle.request.query["link"]
     if not validate_link(link):
         """
         If the link is not valid, display an error message.
         """
         generic_message = 'Bad link.'
         bottle.response.status = 400
+        logger.info(f"The link provided is not valid: {link}")
         return bottle.template('index.html', generic_message=generic_message, message='The link you have provided is not valid', company=settings.company)
 
     try:
@@ -314,6 +322,7 @@ def display_message():
         """
         generic_message = 'Error'
         bottle.response.status = 500
+        logger.error("Failed to connect to database, when trying to get message")
         return bottle.template('index.html', generic_message=generic_message, message='There was a problem communicating with the database.', company=settings.company)
 
     message = r.get(link)
@@ -326,6 +335,7 @@ def display_message():
         generic_message = 'Message not found'
         message = 'No message found on that link'
         bottle.response.status = 200
+        logger.info(f"No message found on this link: {link}")
         return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
 
     if link in ['hello']:
@@ -350,6 +360,7 @@ def display_message():
         """
         generic_message = 'Bad link.'
         bottle.response.status = 403
+        logger.warning(f"The link provided does not match the salt: {link}")
         return bottle.template('index.html', generic_message=generic_message, message='The link you have provided is not valid', company=settings.company)
 
     try:
@@ -368,6 +379,7 @@ def display_message():
                         '''
                         )
         bottle.response.status = 500
+        logger.warning(f"Failed to delete message from database: {link}")
         return bottle.template('index.html', generic_message=generic_message, message=message)
 
     """
@@ -375,6 +387,7 @@ def display_message():
     """
     generic_message = 'This message has been deleted and will not be visible again'
     bottle.response.status = 200
+    logger.info(f"The message has been read by the user at link: {link}")
     return bottle.template('index.html', generic_message=generic_message, message=decrypted_message, company=settings.company, _help=False)
 
 
