@@ -17,7 +17,16 @@ import base64
 app = application = bottle.default_app()
 
 
-# decorator for checking id user-agent is allowed
+@bottle.hook('after_request')
+def enable_cors():
+    """
+    Add CORS headers
+    """
+    bottle.response.headers['Access-Control-Allow-Origin'] = 'https://eu.wikipedia.org'
+    bottle.response.headers['Access-Control-Allow-Methods'] = 'GET'
+    bottle.response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
+
+
 def check_user_agent(fn):
     """
     Decorator function that checks if the user agent is allowed.
@@ -208,7 +217,10 @@ def add_message():
     ttl = 3600
     if 'ttl' in request_body:
         if request_body['ttl']:
-            ttl = request_body['ttl']
+            if isinstance(request_body['ttl'], int):
+                ttl = request_body['ttl']
+                if ttl > 604800:
+                    ttl = 604800
 
     try:
         r = connect()
@@ -269,6 +281,7 @@ def display_message():
 
                     '''
                     )
+
     link = bottle.request.query.link
     try:
         salt = bottle.request.query.salt
@@ -324,7 +337,10 @@ def display_message():
         return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
 
     if salt:
-        decrypted_message = decrypt(message, salt=salt)
+        try:
+            decrypted_message = decrypt(message, salt=salt)
+        except:
+            decrypted_message = False
     else:
         decrypted_message = decrypt(message)
 
@@ -359,7 +375,7 @@ def display_message():
     """
     generic_message = 'This message has been deleted and will not be visible again'
     bottle.response.status = 200
-    return bottle.template('index.html', generic_message=generic_message, message=decrypted_message, company=settings.company)
+    return bottle.template('index.html', generic_message=generic_message, message=decrypted_message, company=settings.company, _help=False)
 
 
 if __name__ == '__main__':
