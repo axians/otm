@@ -19,25 +19,29 @@ logger = logging.getLogger(__name__)
 app = application = bottle.default_app()
 
 
-@bottle.hook('after_request')
+@bottle.hook("after_request")
 def enable_cors():
     """
     Add CORS headers
     """
-    bottle.response.headers['Access-Control-Allow-Origin'] = 'https://eu.wikipedia.org'
-    bottle.response.headers['Access-Control-Allow-Methods'] = 'GET'
-    bottle.response.headers['Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
+    bottle.response.headers["Access-Control-Allow-Origin"] = "https://eu.wikipedia.org"
+    bottle.response.headers["Access-Control-Allow-Methods"] = "GET"
+    bottle.response.headers[
+        "Access-Control-Allow-Headers"
+    ] = "Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token"
 
 
 def check_user_agent(fn):
     """
     Decorator function that checks if the user agent is allowed.
     """
+
     def _wrap(*args, **kwargs):
-        if bottle.request.get_header('User-Agent') in settings.ignore_user_agents:
+        if bottle.request.get_header("User-Agent") in settings.ignore_user_agents:
             bottle.response.status = 403
-            return {'status': 'Failure', 'error': ['User-Agent not allowed']}
+            return {"status": "Failure", "error": ["User-Agent not allowed"]}
         return fn(*args, **kwargs)
+
     return _wrap
 
 
@@ -46,17 +50,23 @@ def rate(fn):
     Decorator function that implements rate limiting for requests based on the client's IP address.
     It checks the number of attempts made by the client within a certain time period and blocks further requests if the limit is exceeded.
     """
+
     def _wrap(*args, **kwargs):
-        generic_message = 'Error.'
+        generic_message = "Error."
         ip = bottle.request.environ.get(settings.http_ip_field)
         try:
             r = connect(settings.ratelimit_db)
         except:
             bottle.response.status = 500
-            if bottle.request.method == 'GET':
-                return bottle.template('index.html', generic_message=generic_message, message='There was a problem communicating with the database', company=settings.company)
+            if bottle.request.method == "GET":
+                return bottle.template(
+                    "index.html",
+                    generic_message=generic_message,
+                    message="There was a problem communicating with the database",
+                    company=settings.company,
+                )
             else:
-                return {'status': 'Failure', 'error': [generic_message]}
+                return {"status": "Failure", "error": [generic_message]}
         try:
             attempts = r.get(ip)
             if not attempts:
@@ -64,23 +74,36 @@ def rate(fn):
         except:
             logger.exception("Failed to initialize ratelimit db")
             bottle.response.status = 500
-            if bottle.request.method == 'GET':
-                return bottle.template('index.html', generic_message=generic_message, message='The ratelimit function is not working as expected', company=settings.company)
+            if bottle.request.method == "GET":
+                return bottle.template(
+                    "index.html",
+                    generic_message=generic_message,
+                    message="The ratelimit function is not working as expected",
+                    company=settings.company,
+                )
             else:
-                return {'status': 'Failure', 'error': [generic_message]}
+                return {"status": "Failure", "error": [generic_message]}
         attempts = bytes_to_int(attempts)
         attempts += 1
         r.setex(ip, 5, int_to_bytes(attempts))
         if attempts > 50:
-            generic_message = 'You have been temporarily banned due to excessive requests'
-            message = 'If you feel like this is/was a mistake please contact the system owner.'
+            generic_message = (
+                "You have been temporarily banned due to excessive requests"
+            )
+            message = "If you feel like this is/was a mistake please contact the system owner."
             r.setex(ip, 86400, int_to_bytes(attempts))
             bottle.response.status = 429
-            if bottle.request.method == 'GET':
-                return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
+            if bottle.request.method == "GET":
+                return bottle.template(
+                    "index.html",
+                    generic_message=generic_message,
+                    message=message,
+                    company=settings.company,
+                )
             else:
-                return {'status': 'Failure', 'error': [generic_message]}
+                return {"status": "Failure", "error": [generic_message]}
         return fn(*args, **kwargs)
+
     return _wrap
 
 
@@ -123,7 +146,12 @@ def connect(db=settings.db):
     """
     Connect to the Redis database.
     """
-    return redis.StrictRedis(settings.redis_host, port=settings.redis_port, db=db, password=settings.redis_pass)
+    return redis.StrictRedis(
+        settings.redis_host,
+        port=settings.redis_port,
+        db=db,
+        password=settings.redis_pass,
+    )
 
 
 def update_redis(key, message, ttl=3600):
@@ -139,7 +167,9 @@ def generate_key():
     """
     Generate a unique key for storing messages.
     """
-    return hashlib.sha256(f'{str(uuid.uuid4())} - {str(time.time())}'.encode()).hexdigest()
+    return hashlib.sha256(
+        f"{str(uuid.uuid4())} - {str(time.time())}".encode()
+    ).hexdigest()
 
 
 def validate_message(message):
@@ -157,7 +187,7 @@ def validate_link(link):
     """
     Validate the link to ensure it is in the correct format and length.
     """
-    if link in ['hello']:
+    if link in ["hello"]:
         return True
     if len(link) != 64:
         return False
@@ -167,7 +197,11 @@ def validate_link(link):
 
 
 def generate_salt():
-    return re.sub("[^a-zA-Z0-9]", "", requests.get("https://en.wikipedia.org/wiki/Special:Random").url.split("/")[-1])
+    return re.sub(
+        "[^a-zA-Z0-9]",
+        "",
+        requests.get("https://en.wikipedia.org/wiki/Special:Random").url.split("/")[-1],
+    )
 
 
 @bottle.get("/static/style/<filepath:re:.*\.(css)>")
@@ -190,7 +224,7 @@ def script(filepath):
     return bottle.static_file(filepath, root="static/script")
 
 
-@bottle.post('/')
+@bottle.post("/")
 @rate
 def add_message():
     """
@@ -200,28 +234,28 @@ def add_message():
     """
     try:
         byte = bottle.request.body
-        request_body = json.loads(byte.read().decode('UTF-8'))
-        message = request_body['message']
+        request_body = json.loads(byte.read().decode("UTF-8"))
+        message = request_body["message"]
     except:
         bottle.response.status = 400
-        return {'status': 'Failure', 'error': ['Wrong input parameters']}
+        return {"status": "Failure", "error": ["Wrong input parameters"]}
 
     if not validate_message(message):
         bottle.response.status = 400
-        return {'status': 'Failure', 'error': ['Bad characters in payload']}
+        return {"status": "Failure", "error": ["Bad characters in payload"]}
 
     display_salt = False
     salt = settings.salt
-    if 'salt' in request_body:
-        if request_body['salt']:
+    if "salt" in request_body:
+        if request_body["salt"]:
             display_salt = True
-            salt = hashlib.sha256(request_body['salt'].encode()).hexdigest()[:32]
+            salt = hashlib.sha256(request_body["salt"].encode()).hexdigest()[:32]
 
     ttl = 3600
-    if 'ttl' in request_body:
-        if request_body['ttl']:
-            if isinstance(request_body['ttl'], int):
-                ttl = request_body['ttl']
+    if "ttl" in request_body:
+        if request_body["ttl"]:
+            if isinstance(request_body["ttl"], int):
+                ttl = request_body["ttl"]
                 if ttl > 604800:
                     ttl = 604800
 
@@ -229,34 +263,36 @@ def add_message():
         r = connect()
     except:
         bottle.response.status = 500
-        return {'status': 'Failure', 'error': ['There was a problem communicating with the database']}
+        return {
+            "status": "Failure",
+            "error": ["There was a problem communicating with the database"],
+        }
 
     key = generate_key()
     encrypted_message = encrypt(message, salt)
 
-
     if update_redis(key, encrypted_message, ttl):
         bottle.response.status = 200
         if display_salt:
-            link = f'{settings.uri}/?link={key}&salt={salt}'
+            link = f"{settings.uri}/?link={key}&salt={salt}"
         else:
-            link = f'{settings.uri}/?link={key}'
-        return {'status': 'Success', 'message': {'link': link, 'key': key}}
+            link = f"{settings.uri}/?link={key}"
+        return {"status": "Success", "message": {"link": link, "key": key}}
     else:
         bottle.response.status = 500
-        return {'status': 'Failure', 'error': ['Failed to store message in database']}
+        return {"status": "Failure", "error": ["Failed to store message in database"]}
 
 
-@bottle.get('/')
+@bottle.get("/")
 @rate
 def display_message():
     """
     Route handler for displaying a message.
     This function retrieves the message from Redis based on the provided link, deletes it from Redis, and displays the message.
     """
-    generic_message = 'Welcome'
+    generic_message = "Welcome"
     message = textwrap.dedent(
-            f'''\
+        f"""\
                     This is a one-time message delivery application.
                     You can generate your own secret message by making a POST request to this URL.
                     In the request body, submit a valid JSON containing the message.
@@ -282,14 +318,14 @@ def display_message():
                     There is a rate limiter in place.
 
 
-                    '''
-                    )
+                    """
+    )
 
     link = bottle.request.query.link
     try:
         salt = bottle.request.query.salt
         if not salt:
-        # Check if salt is empty string
+            # Check if salt is empty string
             salt = settings.salt
     except:
         salt = settings.salt
@@ -299,20 +335,32 @@ def display_message():
         If no link is provided, display the welcome message.
         """
         bottle.response.status = 200
-        return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company, submit=True, salt=generate_salt())
+        return bottle.template(
+            "index.html",
+            generic_message=generic_message,
+            message=message,
+            company=settings.company,
+            submit=True,
+            salt=generate_salt(),
+        )
 
-    real_ip = bottle.request.get_header('X-Real-Ip')
-    user_agent = bottle.request.get_header('User-Agent')
+    real_ip = bottle.request.get_header("X-Real-Ip")
+    user_agent = bottle.request.get_header("User-Agent")
     logger.info(f"Connection from: {real_ip} - Using: {user_agent}")
     link = bottle.request.query["link"]
     if not validate_link(link):
         """
         If the link is not valid, display an error message.
         """
-        generic_message = 'Bad link.'
+        generic_message = "Bad link."
         bottle.response.status = 400
         logger.info(f"The link provided is not valid: {link}")
-        return bottle.template('index.html', generic_message=generic_message, message='The link you have provided is not valid', company=settings.company)
+        return bottle.template(
+            "index.html",
+            generic_message=generic_message,
+            message="The link you have provided is not valid",
+            company=settings.company,
+        )
 
     try:
         r = connect()
@@ -320,10 +368,15 @@ def display_message():
         """
         If there is a problem connecting to Redis, display an error message.
         """
-        generic_message = 'Error'
+        generic_message = "Error"
         bottle.response.status = 500
         logger.error("Failed to connect to database, when trying to get message")
-        return bottle.template('index.html', generic_message=generic_message, message='There was a problem communicating with the database.', company=settings.company)
+        return bottle.template(
+            "index.html",
+            generic_message=generic_message,
+            message="There was a problem communicating with the database.",
+            company=settings.company,
+        )
 
     message = r.get(link)
     ttl = r.ttl(link)
@@ -332,19 +385,29 @@ def display_message():
         """
         If the message is not found, display an error message.
         """
-        generic_message = 'Message not found'
-        message = 'No message found on that link'
+        generic_message = "Message not found"
+        message = "No message found on that link"
         bottle.response.status = 200
         logger.info(f"No message found on this link: {link}")
-        return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
+        return bottle.template(
+            "index.html",
+            generic_message=generic_message,
+            message=message,
+            company=settings.company,
+        )
 
-    if link in ['hello']:
+    if link in ["hello"]:
         """
         If the link is a reserved keyword, display an example message.
         """
         bottle.response.status = 200
-        generic_message = 'This message has been deleted and will not be visible again'
-        return bottle.template('index.html', generic_message=generic_message, message=message, company=settings.company)
+        generic_message = "This message has been deleted and will not be visible again"
+        return bottle.template(
+            "index.html",
+            generic_message=generic_message,
+            message=message,
+            company=settings.company,
+        )
 
     if salt:
         try:
@@ -358,10 +421,15 @@ def display_message():
         """
         If the message cannot be decrypted, display an error message.
         """
-        generic_message = 'Bad link.'
+        generic_message = "Bad link."
         bottle.response.status = 403
         logger.warning(f"The link provided does not match the salt: {link}")
-        return bottle.template('index.html', generic_message=generic_message, message='The link you have provided is not valid', company=settings.company)
+        return bottle.template(
+            "index.html",
+            generic_message=generic_message,
+            message="The link you have provided is not valid",
+            company=settings.company,
+        )
 
     try:
         r.delete(link)
@@ -369,29 +437,37 @@ def display_message():
         """
         If the message cannot be deleted, display an error message.
         """
-        generic_message = 'Failed to delete message'
+        generic_message = "Failed to delete message"
         message = textwrap.dedent(
-                f'''\
+            f"""\
                         Since the message was not deleted, we will not send it.
                         If the error persists, please contact the system owner.
 
                         Time left before your message expires: {ttl}
-                        '''
-                        )
+                        """
+        )
         bottle.response.status = 500
         logger.warning(f"Failed to delete message from database: {link}")
-        return bottle.template('index.html', generic_message=generic_message, message=message)
+        return bottle.template(
+            "index.html", generic_message=generic_message, message=message
+        )
 
     """
     If the message is successfully deleted, display the message.
     """
-    generic_message = 'This message has been deleted and will not be visible again'
+    generic_message = "This message has been deleted and will not be visible again"
     bottle.response.status = 200
     logger.info(f"The message has been read by the user at link: {link}")
-    return bottle.template('index.html', generic_message=generic_message, message=decrypted_message, company=settings.company, _help=False)
+    return bottle.template(
+        "index.html",
+        generic_message=generic_message,
+        message=decrypted_message,
+        company=settings.company,
+        _help=False,
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """
     Start the Bottle server when the script is executed directly.
     """
@@ -400,4 +476,4 @@ if __name__ == '__main__':
     except:
         port = 8080
 
-    bottle.run(host='0.0.0.0', port=port, debug=False, reloader=True)
+    bottle.run(host="0.0.0.0", port=port, debug=False, reloader=True)
