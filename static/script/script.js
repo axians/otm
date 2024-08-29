@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     const submitButton = document.getElementById("submit-button");
+    const submitMessage = document.getElementById("submit-message");
+    const deniedMessage = document.getElementById("denied-message");
     const copyButton = document.getElementById("copy-button");
     const messageInput = document.getElementById("message-input");
     const saltInput = document.getElementById("salt-input");
@@ -15,17 +17,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
     techHelpToggler.checked = false
     helpTech.style.display = "none";
+    deniedMessage.style.display = "none";
     shortTech.style.display = "none";
 
     techHelpToggler.addEventListener("change", function() {
         if(techHelpToggler.checked) {
-            console.log("Display help")
             shortTech.style.display = "";
             shortMain.style.display = "none";
             helpTech.style.display = "";
             helpMain.style.display = "none";
         } else {
-            console.log("Dont display help")
             shortTech.style.display = "none";
             shortMain.style.display = "";
             helpTech.style.display = "none";
@@ -40,7 +41,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const salt = saltInput.value;
             const ttl = ttlInput.value;
             const newSalt = await generateSalt();
-            console.log(newSalt);
 
             const response = await fetch(document.documentURI, {
                 method: "POST",
@@ -62,6 +62,8 @@ document.addEventListener("DOMContentLoaded", function () {
             saltInput.value = newSalt;
         } catch (error) {
             console.error("Error:", error);
+            submitMessage.style.display = "none";
+            deniedMessage.style.display = "block";
         }
     });
 

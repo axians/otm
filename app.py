@@ -13,6 +13,7 @@ import textwrap
 import sys
 from cryptography.fernet import Fernet
 import base64
+import ipaddress
 
 logging.config.dictConfig(settings.log_config)
 logger = logging.getLogger(__name__)
@@ -204,6 +205,10 @@ def generate_salt():
     )
 
 
+def allowed_creator(ip):
+  return any(ipaddress.ip_address(ip) in ipaddress.ip_network(cidr) for cidr in settings.cidrs)
+
+
 @bottle.get("/static/style/<filepath:re:.*\.(css)>")
 def style(filepath):
     return bottle.static_file(filepath, root="static/style")
@@ -232,6 +237,12 @@ def add_message():
     This function expects a JSON payload containing the message and stores it in Redis with a generated key.
     It returns the generated link for accessing the message.
     """
+    if not allowed_creator(bottle.request.get_header("X-Real-Ip")):
+        bottle.response.status = 403
+        return {
+            "status": "Failure",
+            "error": ["Only authorized users can create messages at this time."],
+        }
     try:
         byte = bottle.request.body
         request_body = json.loads(byte.read().decode("UTF-8"))
