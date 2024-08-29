@@ -1,15 +1,53 @@
-% include('header.tpl', title='OTM - Index')
+% include('header.tpl', title='OTP - Axians')
 % setdefault('submit', False)
-<!-- <a class="github-fork-ribbon" href="https://github.com/gbyx3/otm" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a> -->
+% setdefault('_help', True)
+% setdefault('ttl', 3600)
+<!-- <a class="github-fork-ribbon" href="https://github.com/axians/otm" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a> -->
 <div class="top-container">
-    <h3>{{generic_message}}</h3>
+    <div class="brand-logo left"></div>
+
+   % if submit:
+    <div class="tech-help">
+        <span id="tech-short" class="tech-doc"><b>Tech version</b></span>
+        <span id="main-short" class="tech-doc"><b>Sales version</b></span>
+        <label class="switch">
+          <input id="tht" type="checkbox">
+          <span class="slider round"></span>
+        </label>
+    </div>
+    % end
+    <h3 class="generic-message">{{generic_message}}</h3>
 </div>
 <div class="outer-container">
-    <div class="logo-container logo-mask">
-        <!--<img src="static/img/brand_logo.jpg" alt="Brand Logo"/>-->
-    </div>
+    <div class="logo-container logo-mask"></div>
     <div class="container">
+        % if _help:
+        <div id="main-help" class="message">
+          <span style="margin-top:10px;">A Password pusher is a usefull tool for sharing sensitive information<br />
+          This application is just that!</span>
+
+          <p>Once a message or password has been read it is permanently deleted from the database and canot be read again.</p>
+
+          <span>A uniq salt is generated each time you submit a new message, if no salt is specified a default salt will be used.<br />
+          The purpose of the salt is to encrypt the message at rest.<br />
+          <br />
+          This application is free to use.<br />
+          <br />
+          Disclaimer:<br />
+          Please note that {{company}} does not guarantee the delivery of data on this web application. While we make every effort to ensure the accuracy and timeliness of information, technical issues or other factors beyond our control may affect data delivery. Users are encouraged to verify critical information independently.</span>
+          <br />
+          <!--
+          <span>Disclaimer #2:<br />
+          The generated salt is a random page title from a wikipedia article and not something {{company}} is in controll of.<br /> Do note that the salt is the first 32 chars of the sha256 sum of the value.
+          </span>
+          -->
+        </div>
+        <div id="tech-help" class="message">
         <pre>{{message}}</pre>
+        </div>
+        % else:
+        <pre>{{message}}</pre>
+        % end
         % if submit:
         <div class="submit-message">
             <div class="input-header">
@@ -17,15 +55,23 @@
             </div>
             <div class="input-container">
                 <textarea class="input-field" id="message-input" type="text" placeholder="Enter your message here"></textarea>
-                <button class="input-button" id="submit-button" type="button">Submit</button>
             </div>
             <div class="input-header optional">
-                <span>Optional</span>
+                <span>Salt <i>(Optional)</i></span>
             </div>
             <div class="input-container space-start">
                 <input class="input-field small" id="salt-input" type="text" value="{{salt}}"/>
                 <button class="hover-target" ><i class="fas fa-info-circle"></i></button>
                 <div class="hover-popup">Salt is optional, if no salt is specified a default will be used</div>
+            </div>
+            <div class="input-header optional">
+                <span>TTL <i>(Optional)</i></span>
+            </div>
+            <div class="input-container space-start">
+                <input class="input-field small" id="ttl-input" type="text" value="{{ttl}}"/>
+                <button class="hover-target" ><i class="fas fa-info-circle"></i></button>
+                <div class="hover-popup">Time to live for the message, default is 3600 and max is 604800 (7days). The value entered is an integer in seconds</div>
+                <button class="input-button" id="submit-button" type="button">Submit</button>
             </div>
             <div class="link-container">
                 <a href="#" id="link" style="pointer-events:none;"></a>
