@@ -121,33 +121,34 @@ a {
     color: rgba(0, 0, 0, 0.9);
 }
 .link-container {
-   max-width: 750px;
+    word-wrap: break-word;
+    max-width: 750px;
 }
 .container {
-   background-color: rgba(255, 255, 255, 0.9);
-   box-shadow: 0px 14px 55px 5px rgba(0,0,0,0.1);
-   padding: 35px;
-   padding-top: 20px;
-   border-radius: 15px;
-   min-width: 800px;
-   min-height: 500px;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0px 14px 55px 5px rgba(0,0,0,0.1);
+    padding: 35px;
+    padding-top: 20px;
+    border-radius: 15px;
+    min-width: 800px;
+    min-height: 500px;
 }
 .logo-container {
-   z-index: -1;
-   display: block;
-   position: fixed;
-   top: 40px;
-   left: -40px;
-   mask-size: 1300px;
+    z-index: -1;
+    display: block;
+    position: fixed;
+    top: 40px;
+    left: -40px;
+    mask-size: 1300px;
 }
 .outer-container {
-   width: 100%;
-   height: 100%;
-   display: flex;
-   flex-direction: column;
-   align-items: center;
-   position: absolute;
-   top: 250px;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    top: 250px;
 }
 .message {
     max-width: 750px;
@@ -155,35 +156,35 @@ a {
     margin-top: 15px;
 }  
 .tech-doc {
-  top: 8px;
-  right: 10px;
-  position: relative;
+    top: 8px;
+    right: 10px;
+    position: relative;
 }
 .tech-help {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  margin: 5px;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    margin: 5px;
 }
 .brand-logo{
-  position: fixed;
-  background-image: url("/static/img/logo.jpg");
-  background-repeat: no-repeat;
-  background-size: contain;
-  width: 150px;
-  height: 100%;
-  top: 0px;
-  left: 0px;
-  margin: 5px;
+    position: fixed;
+    background-image: url("/static/img/logo.jpg");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 150px;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    margin: 5px;
 }
 .footer {
-   position: fixed;
-   bottom: 0;
-   width: 100%;
-   text-align: center;
-   font-size: 0.8rem;
-   color: gray;
-   padding: 10px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 0.8rem;
+    color: gray;
+    padding: 10px;
 }
 .hover-target {
     border: none;
@@ -191,22 +192,22 @@ a {
     background-color: transparent;
 }
 .hover-popup {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  top: 38px;
-  left: -30px;
-  width: 50ch;
-  margin: min(1rem, 20px);
-  font-size: .8rem;
-  background-color: #d3d3d380;
-  border-radius: 8px;
-  padding: 1.5em;
-  z-index: 42;
-  transform: scale(0);
-  transition: transform 200ms ease;
-  transform-origin: 10% -10px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    top: 38px;
+    left: -30px;
+    width: 50ch;
+    margin: min(1rem, 20px);
+    font-size: .8rem;
+    background-color: #d3d3d380;
+    border-radius: 8px;
+    padding: 1.5em;
+    z-index: 42;
+    transform: scale(0);
+    transition: transform 200ms ease;
+    transform-origin: 10% -10px;
 }
 
 .hover-target:hover + .hover-popup,
@@ -216,58 +217,58 @@ a {
 }
 
 .hover-popup :not(:first-child) {
-  margin-top: 1rem;
+    margin-top: 1rem;
 }
 
 .switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 34px;
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
 }
 
 .switch input { 
-  opacity: 0;
-  width: 0;
-  height: 0;
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
 .slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
 }
 
 .slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
 }
 
 input:checked + .slider {
-  background-color: #95C11F;
+    background-color: #95C11F;
 }
 
 input:focus + .slider {
-  box-shadow: 0 0 1px #2196F3;
+    box-shadow: 0 0 1px #2196F3;
 }
 
 input:checked + .slider:before {
-  -webkit-transform: translateX(26px);
-  -ms-transform: translateX(26px);
-  transform: translateX(26px);
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
 }
 
 .slider.round {
