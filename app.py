@@ -277,7 +277,14 @@ def add_message():
             link = f"{settings.uri}/?link={key}&salt={salt}"
         else:
             link = f"{settings.uri}/?link={key}"
-        return {"status": "Success", "message": {"link": link, "key": key}}
+        return {
+            "status": "Success",
+            "message": {
+                "link": link,
+                "key": key,
+                **({"salt": salt} if display_salt else {}),
+            },
+        }
     else:
         bottle.response.status = 500
         return {"status": "Failure", "error": ["Failed to store message in database"]}
