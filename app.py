@@ -71,7 +71,7 @@ def rate(fn):
         attempts = bytes_to_int(attempts)
         attempts += 1
         r.setex(ip, 5, int_to_bytes(attempts))
-        if attempts > 10:
+        if attempts > 50:
             generic_message = 'You have been temporarily banned due to excessive requests'
             message = 'If you feel like this is/was a mistake please contact the system owner.'
             r.setex(ip, 86400, int_to_bytes(attempts))
