@@ -32,15 +32,19 @@
           The purpose of the salt is to encrypt the message at rest.<br />
           <br />
           This application is free to use.<br />
-          <br />
-          Disclaimer:<br />
-          Please note that {{company}} does not guarantee the delivery of data on this web application. While we make every effort to ensure the accuracy and timeliness of information, technical issues or other factors beyond our control may affect data delivery. Users are encouraged to verify critical information independently.</span>
-          <br />
-          <!--
-          <span>Disclaimer #2:<br />
-          The generated salt is a random page title from a wikipedia article and not something {{company}} is in controll of.<br /> Do note that the salt is the first 32 chars of the sha256 sum of the value.
           </span>
-          -->
+          <br />
+          <div class=disclaimer-container>
+          Disclaimers <button class="hover-target" ><i class="fas fa-info-circle"></i></button>
+          <div class="hover-popup disclaimer-popup">
+          <span>
+          - Please note that {{company}} does not guarantee the delivery of data on this web application. While we make every effort to ensure the accuracy and timeliness of information, technical issues or other factors beyond our control may affect data delivery. Users are encouraged to verify critical information independently.
+          </span>
+          <span>
+          - The generated salt is a random page title from a wikipedia article and not something {{company}} is in controll of.<br /> Do note that the salt is the first 32 chars of the sha256 sum of the value.
+          </span>
+        </div>
+        </div>
         </div>
         <div id="tech-help" class="message">
         <pre>{{message}}</pre>
@@ -69,7 +73,7 @@
             <div class="input-container space-start">
                 <input class="input-field small" id="salt-input" type="text" value="{{salt}}"/>
                 <button class="hover-target" ><i class="fas fa-info-circle"></i></button>
-                <div class="hover-popup">Salt is optional, if no salt is specified a default will be used</div>
+                <div class="hover-popup input-popup">Salt is optional, if no salt is specified a default will be used</div>
             </div>
             <div class="input-header optional">
                 <span>TTL <i>(Optional)</i></span>
@@ -77,7 +81,7 @@
             <div class="input-container space-start">
                 <input class="input-field small" id="ttl-input" type="text" value="{{ttl}}"/>
                 <button class="hover-target" ><i class="fas fa-info-circle"></i></button>
-                <div class="hover-popup">Time to live for the message, default is 3600 and max is 604800 (7days). The value entered is an integer in seconds</div>
+                <div class="hover-popup input-popup">Time to live for the message, default is 3600 and max is 604800 (7days). The value entered is an integer in seconds</div>
                 <button class="input-button" id="submit-button" type="button">Submit</button>
             </div>
             <div class="link-container">

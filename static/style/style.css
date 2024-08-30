@@ -12,6 +12,9 @@ a {
    text-decoration: none;
    color: black;
 }
+.disclaimer-container {
+    position:absolute
+}
 .input-container textarea {
     width: 500px;
 }
@@ -191,15 +194,22 @@ a {
     color: #87888A;
     background-color: transparent;
 }
+.disclaimer-popup {
+    top: -20px;
+    left: 80px;
+    width: 850px;
+}
+.input-popup {
+    top: 38px;
+    left: -30px;
+    width: 50ch;
+}
 .hover-popup {
+    margin: min(1rem, 20px);
     position: relative;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    top: 38px;
-    left: -30px;
-    width: 50ch;
-    margin: min(1rem, 20px);
     font-size: .8rem;
     background-color: #d3d3d380;
     border-radius: 8px;

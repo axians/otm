@@ -35,14 +35,15 @@ def enable_cors():
 def check_user_agent(fn):
     """
     Decorator function that checks if the user agent is allowed.
+    Blocks known link preview agents to prevent one-time links from being invalidated.
     """
-
     def _wrap(*args, **kwargs):
-        if bottle.request.get_header("User-Agent") in settings.ignore_user_agents:
+        user_agent = bottle.request.get_header("User-Agent")
+        if any(re.search(pattern, user_agent, re.IGNORECASE) for pattern in settings.ignore_user_agents):
+            logging.warning(f"Blocked User-Agent: {user_agent}")
             bottle.response.status = 403
             return {"status": "Failure", "error": ["User-Agent not allowed"]}
         return fn(*args, **kwargs)
-
     return _wrap
 
 
@@ -238,6 +239,7 @@ def add_message():
     It returns the generated link for accessing the message.
     """
     if not allowed_creator(bottle.request.get_header("X-Real-Ip")):
+        # Ensure this header value matches what the reverse proxy (e.g., Nginx, Apache) sends.
         bottle.response.status = 403
         return {
             "status": "Failure",
@@ -249,7 +251,7 @@ def add_message():
         message = request_body["message"]
     except:
         bottle.response.status = 400
-        return {"status": "Failure", "error": ["Wrong input parameters"]}
+        return {"status": "Failure", "error": ["Wrong input parameters", "Windows users need to convert payload to UTF-8 before sending the payload"]}
 
     if not validate_message(message):
         bottle.response.status = 400
@@ -303,6 +305,7 @@ def add_message():
 
 @bottle.get("/")
 @rate
+@check_user_agent
 def display_message():
     """
     Route handler for displaying a message.
@@ -314,18 +317,19 @@ def display_message():
                     This is a one-time message delivery application.
                     You can generate your own secret message by making a POST request to this URL.
                     In the request body, submit a valid JSON containing the message.
-                    Eg:
-                    curl -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri}
 
                     You will receive your unique link in the response body.
 
                     Eg:
-                    curl -s -XPOST -d '{{"message":"This is your secret message!"}}' {settings.uri} | jq
+                     curl -s -XPOST -d                                                                         \\
+                            '{{"message":"This is your secret message!", "salt":"HackThePlanet", "ttl":"3600"}}' \\
+                            {settings.uri} | jq
                     {{
                         "status": "Success",
                         "message": {{
-                            "link": "{settings.uri}?link=3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41",
-                            "key": "3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41"
+                            "link": "{settings.uri}?link=3a2669a5df<Fit in the box please>d1db0f3056f58b7c41",
+                            "key": "3a2669a5df9add71aa79469e3194a68ebf4848c8a9bfafd1db0f3056f58b7c41",
+                            "salt":"<hash('HackThePlanet')>"
                             }}
                         }}
 
