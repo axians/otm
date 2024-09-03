@@ -20,18 +20,6 @@ logger = logging.getLogger(__name__)
 app = application = bottle.default_app()
 
 
-@bottle.hook("after_request")
-def enable_cors():
-    """
-    Add CORS headers
-    """
-    bottle.response.headers["Access-Control-Allow-Origin"] = "https://eu.wikipedia.org"
-    bottle.response.headers["Access-Control-Allow-Methods"] = "GET"
-    bottle.response.headers[
-        "Access-Control-Allow-Headers"
-    ] = "Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token"
-
-
 def check_user_agent(fn):
     """
     Decorator function that checks if the user agent is allowed.
@@ -210,6 +198,25 @@ def allowed_creator(ip):
   return any(ipaddress.ip_address(ip) in ipaddress.ip_network(cidr) for cidr in settings.cidrs)
 
 
+@bottle.hook("after_request")
+def enable_cors():
+    """
+    Add CORS headers
+    """
+    bottle.response.headers["Access-Control-Allow-Origin"] = "https://eu.wikipedia.org"
+    bottle.response.headers["Access-Control-Allow-Methods"] = "GET"
+    bottle.response.headers[
+        "Access-Control-Allow-Headers"
+    ] = "Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token"
+
+
+@app.error(404)
+def err_404(err):
+    bottle.response.content_type = "text/html"
+    bottle.response.status = 404
+    return "<pre>The page or virtual host your looking for dont exist.</pre>"
+
+
 @bottle.get("/static/style/<filepath:re:.*\.(css)>")
 def style(filepath):
     return bottle.static_file(filepath, root="static/style")
@@ -238,8 +245,12 @@ def add_message():
     This function expects a JSON payload containing the message and stores it in Redis with a generated key.
     It returns the generated link for accessing the message.
     """
+    real_ip = bottle.request.get_header("X-Real-Ip")
+    user_agent = bottle.request.get_header("User-Agent")
+    logger.info(f"POST from: {real_ip} - Using: {user_agent}")
     if not allowed_creator(bottle.request.get_header("X-Real-Ip")):
         # Ensure this header value matches what the reverse proxy (e.g., Nginx, Apache) sends.
+        logger.info(f"{real_ip} - is not a authorized to POST")
         bottle.response.status = 403
         return {
             "status": "Failure",
@@ -250,10 +261,12 @@ def add_message():
         request_body = json.loads(byte.read().decode("UTF-8"))
         message = request_body["message"]
     except:
+        logger.error(f"Wrong input parameters or payload encoding.")
         bottle.response.status = 400
         return {"status": "Failure", "error": ["Wrong input parameters", "Windows users need to convert payload to UTF-8 before sending the payload"]}
 
     if not validate_message(message):
+        logger.warning(f"Blocked characters in message payload")
         bottle.response.status = 400
         return {"status": "Failure", "error": ["Bad characters in payload"]}
 
@@ -275,6 +288,7 @@ def add_message():
     try:
         r = connect()
     except:
+        logger.critical(f"Failed to connect to redis database")
         bottle.response.status = 500
         return {
             "status": "Failure",
@@ -285,6 +299,7 @@ def add_message():
     encrypted_message = encrypt(message, salt)
 
     if update_redis(key, encrypted_message, ttl):
+        logger.info(f"Message created successfully.")
         bottle.response.status = 200
         if display_salt:
             link = f"{settings.uri}/?link={key}&salt={salt}"
@@ -299,6 +314,7 @@ def add_message():
             },
         }
     else:
+        logger.critical(f"Failed to create message")
         bottle.response.status = 500
         return {"status": "Failure", "error": ["Failed to store message in database"]}
 
@@ -382,6 +398,7 @@ def display_message():
             generic_message=generic_message,
             message="The link you have provided is not valid",
             company=settings.company,
+            _help=False
         )
 
     try:
@@ -398,6 +415,7 @@ def display_message():
             generic_message=generic_message,
             message="There was a problem communicating with the database.",
             company=settings.company,
+            _help=False
         )
 
     message = r.get(link)
@@ -416,6 +434,7 @@ def display_message():
             generic_message=generic_message,
             message=message,
             company=settings.company,
+            _help=False
         )
 
     if link in ["hello"]:
@@ -429,6 +448,7 @@ def display_message():
             generic_message=generic_message,
             message=message,
             company=settings.company,
+            _help=False
         )
 
     if salt:
@@ -451,6 +471,7 @@ def display_message():
             generic_message=generic_message,
             message="The link you have provided is not valid",
             company=settings.company,
+            _help=False
         )
 
     try:
