@@ -54,9 +54,9 @@ JSON format:
 
 ```json
 {
-  "message": "Required",
-  "salt": "Optional, if not provided a static salt will be used",
-  "ttl": "Optional, default 3600"
+  "message": "This is the message", // Required
+  "salt": "YourCustomSalt", // Optional, if not provided a static salt will be used
+  "ttl": 3600 // Optional, default 3600
 }
 ```
 
