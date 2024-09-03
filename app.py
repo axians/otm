@@ -336,7 +336,7 @@ def display_message():
 
                     You will receive your unique link in the response body.
 
-                    Eg:
+                    Example:
                      curl -s -XPOST -d                                                                         \\
                             '{{"message":"This is your secret message!", "salt":"HackThePlanet", "ttl":"3600"}}' \\
                             {settings.uri} | jq

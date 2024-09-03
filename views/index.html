@@ -23,12 +23,12 @@
     <div class="container">
         % if _help:
         <div id="main-help" class="message">
-          <span style="margin-top:10px;">A Password pusher is a usefull tool for sharing sensitive information<br />
+          <span style="margin-top:10px;">A Password pusher is a useful tool for sharing sensitive information<br />
           This application is just that!</span>
 
-          <p>Once a message or password has been read it is permanently deleted from the database and canot be read again.</p>
+          <p>Once a message or password has been read it is permanently deleted from the database and can <b>not</b> be read again.</p>
 
-          <span>A uniq salt is generated each time you submit a new message, if no salt is specified a default salt will be used.<br />
+          <span>A unique salt is generated each time you submit a new message, if no salt is specified a default salt will be used.<br />
           The purpose of the salt is to encrypt the message at rest.<br />
           <br />
           This application is free to use.<br />
@@ -41,7 +41,7 @@
           - Please note that {{company}} does not guarantee the delivery of data on this web application. While we make every effort to ensure the accuracy and timeliness of information, technical issues or other factors beyond our control may affect data delivery. Users are encouraged to verify critical information independently.
           </span>
           <span>
-          - The generated salt is a random page title from a wikipedia article and not something {{company}} is in controll of.<br /> Do note that the salt is the first 32 chars of the sha256 sum of the value.
+          - The generated salt is a random page title from a Wikipedia article and not something {{company}} is in control of.<br /> Do note that the salt is the first 32 chars of the sha256 sum of the value.
           </span>
         </div>
         </div>
