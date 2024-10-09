@@ -13,7 +13,8 @@ a {
    color: black;
 }
 .disclaimer-container {
-    position:absolute
+    position:absolute;
+    max-height: 100px;
 }
 .input-container textarea {
     width: 500px;
