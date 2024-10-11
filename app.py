@@ -277,13 +277,19 @@ def add_message():
             display_salt = True
             salt = hashlib.sha256(request_body["salt"].encode()).hexdigest()[:32]
 
-    ttl = 3600
+    DEFAULT_TTL = 3600
+    ttl = DEFAULT_TTL
     if "ttl" in request_body:
         if request_body["ttl"]:
-            if isinstance(request_body["ttl"], int):
-                ttl = request_body["ttl"]
+            try:
+                ttl = int(request_body["ttl"])
                 if ttl > 604800:
                     ttl = 604800
+            except (ValueError, TypeError):
+                ttl = DEFAULT_TTL
+            except:
+                logger.exception(f"Unexpected error while processing TTL")
+                ttl = DEFAULT_TTL
 
     try:
         r = connect()
