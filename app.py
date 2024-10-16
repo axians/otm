@@ -277,19 +277,18 @@ def add_message():
             display_salt = True
             salt = hashlib.sha256(request_body["salt"].encode()).hexdigest()[:32]
 
-    DEFAULT_TTL = 3600
-    ttl = DEFAULT_TTL
-    if "ttl" in request_body:
-        if request_body["ttl"]:
-            try:
-                ttl = int(request_body["ttl"])
-                if ttl > 604800:
-                    ttl = 604800
-            except (ValueError, TypeError):
-                ttl = DEFAULT_TTL
-            except:
-                logger.exception(f"Unexpected error while processing TTL")
-                ttl = DEFAULT_TTL
+
+    ttl = 3600
+    if "ttl" in request_body and request_body["ttl"]:
+        try:
+            ttl = int(request_body["ttl"])
+        except (ValueError, TypeError):
+            logger.warning(f"Failed to convert TTL to integer")
+            bottle.response.status = 400
+            return {"status": "Failure", "error": ["TTL must be an integer"]}
+        if ttl > 604800:
+            ttl = 604800
+
 
     try:
         r = connect()
