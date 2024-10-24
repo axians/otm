@@ -282,10 +282,12 @@ def add_message():
     if "ttl" in request_body and request_body["ttl"]:
         try:
             ttl = int(request_body["ttl"])
-        except (ValueError, TypeError):
-            logger.warning(f"Failed to convert TTL to integer")
+            if ttl <= 0:
+                raise ValueError("The number must be a positive integer.")
+        except (ValueError, TypeError) as e:
+            logger.warning(f"Failed to convert TTL to integer: {str(e)}")
             bottle.response.status = 400
-            return {"status": "Failure", "error": ["TTL must be an integer"]}
+            return {"status": "Failure", "error": ["TTL must be a positive integer"]}
         if ttl > 604800:
             ttl = 604800
 
