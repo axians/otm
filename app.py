@@ -277,13 +277,20 @@ def add_message():
             display_salt = True
             salt = hashlib.sha256(request_body["salt"].encode()).hexdigest()[:32]
 
+
     ttl = 3600
-    if "ttl" in request_body:
-        if request_body["ttl"]:
-            if isinstance(request_body["ttl"], int):
-                ttl = request_body["ttl"]
-                if ttl > 604800:
-                    ttl = 604800
+    if "ttl" in request_body and request_body["ttl"]:
+        try:
+            ttl = int(request_body["ttl"])
+            if ttl <= 0:
+                raise ValueError("The number must be a positive integer.")
+        except (ValueError, TypeError) as e:
+            logger.warning(f"Failed to convert TTL to integer: {str(e)}")
+            bottle.response.status = 400
+            return {"status": "Failure", "error": ["TTL must be a positive integer"]}
+        if ttl > 604800:
+            ttl = 604800
+
 
     try:
         r = connect()
