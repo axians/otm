@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const saltInput = document.getElementById("salt-input");
     const ttlInput = document.getElementById("ttl-input");
     const linkElement = document.getElementById("link");
+    const pinElement = document.getElementById("pin");
+    const pinCodeElement = document.getElementById("pin-code");
     const techHelpToggler = document.getElementById("tht");
     const shortMain = document.getElementById("main-short");
     const shortTech = document.getElementById("tech-short");
@@ -41,13 +43,14 @@ document.addEventListener("DOMContentLoaded", function () {
             const salt = saltInput.value;
             const ttl = ttlInput.value;
             const newSalt = await generateSalt();
+            const requirePin = pinElement.checked;
 
             const response = await fetch(document.documentURI, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ message, salt, ttl })
+                body: JSON.stringify({ message, salt, ttl, requirePin })
             });
 
             if (!response.ok) {
@@ -55,8 +58,15 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             const data = await response.json();
+            console.log("Response:", data);
             linkElement.innerHTML = data.message.link;
             linkElement.href = data.message.link;
+            if (data.message.pin) {
+                pinCodeElement.innerHTML = "PIN: " + data.message.pin;
+            }
+            else {
+                pinCodeElement.innerHTML = "";
+            }
             copyButton.hidden = false;
             messageInput.value = initialMessageValue;
             saltInput.value = newSalt;
