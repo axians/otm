@@ -14,6 +14,7 @@ import sys
 from cryptography.fernet import Fernet
 import base64
 import ipaddress
+import random
 
 logging.config.dictConfig(settings.log_config)
 logger = logging.getLogger(__name__)
@@ -271,6 +272,7 @@ def add_message():
         return {"status": "Failure", "error": ["Bad characters in payload"]}
 
     display_salt = False
+    pin = None
     salt = settings.salt
     if "salt" in request_body:
         if request_body["salt"]:
@@ -290,7 +292,10 @@ def add_message():
             return {"status": "Failure", "error": ["TTL must be a positive integer"]}
         if ttl > 604800:
             ttl = 604800
-
+    if request_body["requirePin"]:
+        pin = f"{random.randint(0, 9999):04d}"
+        logger.info(f"PIN: {pin}")
+    logger.info(request_body)
 
     try:
         r = connect()
@@ -303,9 +308,12 @@ def add_message():
         }
 
     key = generate_key()
-    encrypted_message = encrypt(message, salt)
+    encrypted_message = encrypt(message, salt).decode("utf-8")
+    logger.info(f"Encrypted message: {encrypted_message}")
+    db_message = json.dumps({"message": encrypted_message, "pin": pin})
+    logger.info(f"json message: {json.dumps(db_message)}")
 
-    if update_redis(key, encrypted_message, ttl):
+    if update_redis(key, db_message, ttl):
         logger.info(f"Message created successfully.")
         bottle.response.status = 200
         if display_salt:
@@ -315,6 +323,7 @@ def add_message():
         return {
             "status": "Success",
             "message": {
+                "pin": pin,
                 "link": link,
                 "key": key,
                 **({"salt": salt} if display_salt else {}),
@@ -425,7 +434,9 @@ def display_message():
             _help=False
         )
 
-    message = r.get(link)
+    db_message = r.get(link)
+    logger.info(json.loads(db_message.decode("utf-8")))
+
     ttl = r.ttl(link)
 
     if not message:
