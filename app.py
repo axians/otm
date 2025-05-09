@@ -130,7 +130,7 @@ def decrypt(message, salt=settings.salt):
         f = Fernet(key)
     except ValueError:
         return False
-    return f.decrypt(message.decode())
+    return f.decrypt(message)
 
 
 def connect(db=settings.db):
@@ -435,11 +435,7 @@ def display_message():
         )
 
     db_message = r.get(link)
-    logger.info(json.loads(db_message.decode("utf-8")))
-
-    ttl = r.ttl(link)
-
-    if not message:
+    if not db_message:
         """
         If the message is not found, display an error message.
         """
@@ -468,6 +464,16 @@ def display_message():
             company=settings.company,
             _help=False
         )
+
+    logger.info(json.loads(db_message.decode("utf-8")))
+    json_message = json.loads(db_message.decode("utf-8"))
+    message = json_message["message"]
+    pin = json_message["pin"]
+    logger.info(f"PIN: {pin}")
+    logger.info(f"Post message: {message}")
+    logger.info(f"Salt: {salt}")
+
+    ttl = r.ttl(link)
 
     if salt:
         try:
