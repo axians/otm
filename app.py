@@ -335,6 +335,63 @@ def add_message():
         return {"status": "Failure", "error": ["Failed to store message in database"]}
 
 
+@bottle.get("/<link>")
+@rate
+@check_user_agent
+def get_protected_message(link, salt=None):
+    """
+    Route handler for retrieving a message that has a PIN.
+    This function checks if the provided message ID is valid and retrieves the message from Redis.
+
+    Todo:
+        - Change this to a POST request with the PIN and SALT
+        - Create a new template for this route
+          - Display the PIN input box
+          - Make a GET request to /<link> with the SALT and PIN
+    """
+    pin = bottle.request.query.get("pin", None)
+    if not pin:
+        return bottle.template(
+            "index.html",
+            generic_message="PIN required",
+            message="Please provide a PIN to access this message.",
+            company=settings.company,
+            _help=False
+        )
+    if not validate_link(link):
+        generic_message = "Bad link."
+        bottle.response.status = 400
+        logger.info(f"The link provided is not valid: {link}")
+        return bottle.template(
+            "index.html",
+            generic_message=generic_message,
+            message="The link you have provided is not valid",
+            company=settings.company,
+            _help=False
+        )
+    try:
+        r = connect()
+    except:
+        """
+        If there is a problem connecting to Redis, display an error message.
+        """
+        generic_message = "Error"
+        bottle.response.status = 500
+        logger.error("Failed to connect to database, when trying to get message")
+        return bottle.template(
+            "index.html",
+            generic_message=generic_message,
+            message="There was a problem communicating with the database.",
+            company=settings.company,
+            _help=False
+        )
+    db_message = r.get(link)
+    logger.info(f"Link: {link}")
+    logger.info(f"DB message: {db_message}")
+
+    return display_message()
+
+
 @bottle.get("/")
 @rate
 @check_user_agent
@@ -469,6 +526,20 @@ def display_message():
     json_message = json.loads(db_message.decode("utf-8"))
     message = json_message["message"]
     pin = json_message["pin"]
+    if pin:
+        # Change this to the new template that needs to be created
+        # Pass the link and salt to the template
+        # Only display the PIN input box
+        # Templaste makes GET request to /<link> with the SALT and PIN (Should be a POST request to /<link> with the SALT and PIN)
+        # Will fix this later so not to log the SALT and PIN in the webserver logs
+        return bottle.template(
+            "index.html",
+            generic_message="PIN required",
+            message=f"Please provide a PIN to access this message.\n\nLINK: {link}\nSALT: {salt}",
+            company=settings.company,
+            _help=False
+        )
+
     logger.info(f"PIN: {pin}")
     logger.info(f"Post message: {message}")
     logger.info(f"Salt: {salt}")
