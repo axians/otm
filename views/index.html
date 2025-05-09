@@ -66,6 +66,9 @@
             </div>
             <div class="input-container">
                 <textarea class="input-field" id="message-input" type="text" placeholder="Enter your message here"></textarea>
+                <div class="require-pin">
+                    <span><input id="pin" type="checkbox" name="option" value="option1"> Pin?</span>
+                </div>
             </div>
             <div class="input-header optional">
                 <span>Salt <i>(Optional)</i></span>
@@ -87,6 +90,9 @@
             <div class="link-container">
                 <a href="#" id="link" style="pointer-events:none;"></a>
                 <button id="copy-button" class="clip-button" hidden="true"><i class="fas fa-clipboard"></i></button>
+            </div>
+            <div class="link-container">
+                <a href="#" id="pin-code" style="pointer-events:none;"></a>
             </div>
         </div>
         % end
