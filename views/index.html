@@ -2,6 +2,7 @@
 % setdefault('submit', False)
 % setdefault('_help', True)
 % setdefault('ttl', 3600)
+% setdefault('pin', False)
 <!-- <a class="github-fork-ribbon" href="https://github.com/axians/otm" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a> -->
 <div class="top-container">
     <div class="brand-logo left"></div>
@@ -50,7 +51,33 @@
         <pre>{{message}}</pre>
         </div>
         % else:
-        <pre>{{message}}</pre>
+          % if pin:
+          <div id="pin-message" class="pin-message">
+            <div class="input-header optional">
+                <span>PIN Code</span>
+            </div>
+            <div class="input-container space-start">
+                <input class="input-field small" id="pin-input" type="text" value="1337"/>
+                <button class="hover-target" ><i class="fas fa-info-circle"></i></button>
+                <div class="hover-popup input-popup">A uniq pin code is required to view this message, contact the sender if you have not recived it.</div>
+                <button class="input-button" id="pin-button" type="button">Submit</button>
+                <script>
+                    // Inline JavaScript to attach event listener to pin-button
+                    document.getElementById("pin-button").addEventListener("click", function() {
+                        const pin = document.getElementById("pin-input").value.trim();
+                        if (pin) {
+                            const path = window.location.pathname;
+                            const params = new URLSearchParams(window.location.search);
+                            params.append("pin", pin);
+                            window.location.assign(`${path}?${params.toString()}`);
+                        }
+                    });
+                </script>
+            </div>
+          </div>
+          % else:
+          <pre>{{message}}</pre>
+          % end
         % end
         % if submit:
         <div id="denied-message" class="denied-message" >
@@ -64,11 +91,13 @@
             <div class="input-header">
                 <span>Enter your message here</span>
             </div>
+            <!-- BETA feature, not yet fully implemented
             <div class="input-container">
                 <textarea class="input-field" id="message-input" type="text" placeholder="Enter your message here"></textarea>
                 <div class="require-pin">
-                    <span><input id="pin" type="checkbox" name="option" value="option1"> Pin?</span>
+                    <span><input id="pin-check" type="checkbox" name="option" value="option1"> Pin?</span>
                 </div>
+            -->
             </div>
             <div class="input-header optional">
                 <span>Salt <i>(Optional)</i></span>
@@ -92,7 +121,7 @@
                 <button id="copy-button" class="clip-button" hidden="true"><i class="fas fa-clipboard"></i></button>
             </div>
             <div class="link-container">
-                <a href="#" id="pin-code" style="pointer-events:none;"></a>
+                <a href="#" id="pin" style="pointer-events:none;"></a>
             </div>
         </div>
         % end
