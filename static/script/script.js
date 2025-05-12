@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const initialMessageValue = messageInput.value;
     const initialButtonText = copyButton.innerHTML;
 
+    pinElementCheck.checked = false;
     techHelpToggler.checked = false
     helpTech.style.display = "none";
     deniedMessage.style.display = "none";

@@ -154,6 +154,46 @@ a {
     position: absolute;
     top: 250px;
 }
+.require-pin {
+    display: none;
+}
+.pin-input-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    margin-bottom: 25px;
+}
+.pin-input {
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    font-size: 18px;
+    font-family: monospace;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.pin-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.pin-input:hover {
+    border-color: #999;
+}
+
+.pin-input:invalid {
+    border-color: #ff4d4d;
+}
+
+.pin-message {
+    text-align: center;
+    margin-top: 75px;
+}
 .message {
     max-width: 750px;
     min-height: 300px;
