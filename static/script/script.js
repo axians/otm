@@ -66,10 +66,10 @@ document.addEventListener("DOMContentLoaded", function () {
             linkElement.innerHTML = data.message.link;
             linkElement.href = data.message.link;
             if (data.message.pin) {
-                pinCodeElement.innerHTML = "PIN: " + data.message.pin;
+                pinElement.innerHTML = "PIN: " + data.message.pin;
             }
             else {
-                pinCodeElement.innerHTML = "";
+                pinElement.innerHTML = "";
             }
             copyButton.hidden = false;
             messageInput.value = initialMessageValue;
