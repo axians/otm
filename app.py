@@ -295,7 +295,6 @@ def add_message():
     require_pin = request_body.get("requirePin", False)
     if require_pin:
         pin = f"{random.randint(0, 9999):04d}"
-        logger.info(f"PIN: {pin}")
     logger.info(request_body)
 
     try:
@@ -310,9 +309,7 @@ def add_message():
 
     key = generate_key()
     encrypted_message = encrypt(message, salt).decode("utf-8")
-    logger.info(f"Encrypted message: {encrypted_message}")
     db_message = json.dumps({"message": encrypted_message, "pin": pin})
-    logger.info(f"json message: {json.dumps(db_message)}")
 
     if update_redis(key, db_message, ttl):
         logger.info(f"Message created successfully.")
