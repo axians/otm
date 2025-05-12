@@ -2,6 +2,7 @@
 % setdefault('submit', False)
 % setdefault('_help', True)
 % setdefault('ttl', 3600)
+% setdefault('pin', False)
 <!-- <a class="github-fork-ribbon" href="https://github.com/axians/otm" data-ribbon="Fork me on GitHub" title="Fork me on GitHub">Fork me on GitHub</a> -->
 <div class="top-container">
     <div class="brand-logo left"></div>
@@ -50,7 +51,66 @@
         <pre>{{message}}</pre>
         </div>
         % else:
-        <pre>{{message}}</pre>
+          % if pin:
+          <div id="pin-message" class="pin-message">
+            <div class="input-header optional">
+                <span>Enter your PIN Code</span>
+            </div>
+            <div class="pin-outer-container">
+                <div class="pin-input-container">
+                    <input class="pin-input" type="text" maxlength="1" pattern="[0-9]" id="pin1" autofocus />
+                    <input class="pin-input" type="text" maxlength="1" pattern="[0-9]" id="pin2" />
+                    <input class="pin-input" type="text" maxlength="1" pattern="[0-9]" id="pin3" />
+                    <input class="pin-input" type="text" maxlength="1" pattern="[0-9]" id="pin4" />
+                </div>
+                <div class="pin-submit-container">
+                <button class="input-button" id="pin-button" type="button">Submit</button>
+                </div>
+                <script>
+                    console.log("Pin button script loaded");
+                    // Handle auto-focus for PIN inputs
+                    const pinInputs = document.querySelectorAll(".pin-input");
+                    pinInputs.forEach((input, index) => {
+                        input.addEventListener("input", () => {
+                            if (input.value.match(/^[0-9]$/)) {
+                                if (index < pinInputs.length - 1) {
+                                    pinInputs[index + 1].focus();
+                                }
+                            } else {
+                                input.value = ""; // Clear non-digit input
+                            }
+                        });
+                        input.addEventListener("keydown", (e) => {
+                            if (e.key === "Backspace" && !input.value && index > 0) {
+                                pinInputs[index - 1].focus();
+                            }
+                        });
+                    });
+                    // Handle pin-button click
+                    document.getElementById("pin-button").addEventListener("click", function() {
+                        const pin = Array.from(pinInputs).map(input => input.value).join("");
+                        if (pin.length === 4 && pin.match(/^[0-9]{4}$/)) {
+                            const path = window.location.pathname;
+                            const params = new URLSearchParams(window.location.search);
+                            params.append("pin", pin);
+                            window.location.assign(`${path}?${params.toString()}`);
+                        } else {
+                            const deniedMessage = document.getElementById("denied-message");
+                            if (deniedMessage) {
+                                deniedMessage.style.display = "block";
+                                deniedMessage.innerHTML = "Please enter a valid 4-digit PIN.";
+                                setTimeout(() => {
+                                    deniedMessage.style.display = "none";
+                                }, 3000);
+                            }
+                        }
+                    });
+                </script>
+            </div>
+          </div>
+          % else:
+          <pre>{{message}}</pre>
+          % end
         % end
         % if submit:
         <div id="denied-message" class="denied-message" >
@@ -66,6 +126,9 @@
             </div>
             <div class="input-container">
                 <textarea class="input-field" id="message-input" type="text" placeholder="Enter your message here"></textarea>
+                <div class="require-pin">
+                    <span><input id="pin-check" type="checkbox" name="option" value="option1"> Pin?</span>
+                </div>
             </div>
             <div class="input-header optional">
                 <span>Salt <i>(Optional)</i></span>
@@ -87,6 +150,9 @@
             <div class="link-container">
                 <a href="#" id="link" style="pointer-events:none;"></a>
                 <button id="copy-button" class="clip-button" hidden="true"><i class="fas fa-clipboard"></i></button>
+            </div>
+            <div class="link-container">
+                <a href="#" id="pin" style="pointer-events:none;"></a>
             </div>
         </div>
         % end

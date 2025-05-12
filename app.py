@@ -14,6 +14,7 @@ import sys
 from cryptography.fernet import Fernet
 import base64
 import ipaddress
+import random
 
 logging.config.dictConfig(settings.log_config)
 logger = logging.getLogger(__name__)
@@ -129,7 +130,7 @@ def decrypt(message, salt=settings.salt):
         f = Fernet(key)
     except ValueError:
         return False
-    return f.decrypt(message.decode())
+    return f.decrypt(message)
 
 
 def connect(db=settings.db):
@@ -271,6 +272,7 @@ def add_message():
         return {"status": "Failure", "error": ["Bad characters in payload"]}
 
     display_salt = False
+    pin = None
     salt = settings.salt
     if "salt" in request_body:
         if request_body["salt"]:
@@ -290,7 +292,11 @@ def add_message():
             return {"status": "Failure", "error": ["TTL must be a positive integer"]}
         if ttl > 604800:
             ttl = 604800
-
+    require_pin = request_body.get("requirePin", False)
+    if require_pin:
+        pin = f"{random.randint(0, 9999):04d}"
+        logger.info(f"PIN: {pin}")
+    logger.info(request_body)
 
     try:
         r = connect()
@@ -303,9 +309,12 @@ def add_message():
         }
 
     key = generate_key()
-    encrypted_message = encrypt(message, salt)
+    encrypted_message = encrypt(message, salt).decode("utf-8")
+    logger.info(f"Encrypted message: {encrypted_message}")
+    db_message = json.dumps({"message": encrypted_message, "pin": pin})
+    logger.info(f"json message: {json.dumps(db_message)}")
 
-    if update_redis(key, encrypted_message, ttl):
+    if update_redis(key, db_message, ttl):
         logger.info(f"Message created successfully.")
         bottle.response.status = 200
         if display_salt:
@@ -315,6 +324,7 @@ def add_message():
         return {
             "status": "Success",
             "message": {
+                "pin": pin,
                 "link": link,
                 "key": key,
                 **({"salt": salt} if display_salt else {}),
@@ -367,13 +377,16 @@ def display_message():
     )
 
     link = bottle.request.query.link
-    try:
-        salt = bottle.request.query.salt
-        if not salt:
-            # Check if salt is empty string
-            salt = settings.salt
-    except:
+    if "salt" in bottle.request.query:
+        salt = bottle.request.query.get("salt", settings.salt)
+    else:
         salt = settings.salt
+
+    if "pin" in bottle.request.query:
+        pin = bottle.request.query.get("pin", None)
+    else:
+        pin = None
+
 
     if not link:
         """
@@ -425,10 +438,8 @@ def display_message():
             _help=False
         )
 
-    message = r.get(link)
-    ttl = r.ttl(link)
-
-    if not message:
+    db_message = r.get(link)
+    if not db_message:
         """
         If the message is not found, display an error message.
         """
@@ -457,6 +468,36 @@ def display_message():
             company=settings.company,
             _help=False
         )
+
+    logger.info(json.loads(db_message.decode("utf-8")))
+    json_message = json.loads(db_message.decode("utf-8"))
+    message = json_message["message"]
+    require_pin = json_message["pin"]
+    if require_pin:
+        if not pin:
+            return bottle.template(
+                "index.html",
+                generic_message="PIN required",
+                salt=salt,
+                link=link,
+                pin=True,
+                message="Please provide a PIN to access this message.",
+                company=settings.company,
+                _help=False
+            )
+
+        if require_pin != pin:
+            bottle.response.status = 401
+            generic_message = "Wrong PIN"
+            return bottle.template(
+                "index.html",
+                generic_message=generic_message,
+                message="Provide a valid PIN to access this message, go back and try again",
+                company=settings.company,
+                _help=False
+                )
+
+    ttl = r.ttl(link)
 
     if salt:
         try:
