@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     const submitButton = document.getElementById("submit-button");
+    const submitPinButton = document.getElementById("pin-button");
     const submitMessage = document.getElementById("submit-message");
     const deniedMessage = document.getElementById("denied-message");
     const copyButton = document.getElementById("copy-button");
@@ -7,6 +8,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const saltInput = document.getElementById("salt-input");
     const ttlInput = document.getElementById("ttl-input");
     const linkElement = document.getElementById("link");
+    const pinElement = document.getElementById("pin");
+    const pinElementCheck = document.getElementById("pin-check");
     const techHelpToggler = document.getElementById("tht");
     const shortMain = document.getElementById("main-short");
     const shortTech = document.getElementById("tech-short");
@@ -15,10 +18,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const initialMessageValue = messageInput.value;
     const initialButtonText = copyButton.innerHTML;
 
+    pinElementCheck.checked = false;
     techHelpToggler.checked = false
     helpTech.style.display = "none";
     deniedMessage.style.display = "none";
     shortTech.style.display = "none";
+
 
     techHelpToggler.addEventListener("change", function() {
         if(techHelpToggler.checked) {
@@ -35,19 +40,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
     });
 
+
     submitButton.addEventListener("click", async () => {
         try {
             const message = messageInput.value;
             const salt = saltInput.value;
             const ttl = ttlInput.value;
             const newSalt = await generateSalt();
+            const requirePin = pinElementCheck.checked;
 
             const response = await fetch(document.documentURI, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ message, salt, ttl })
+                body: JSON.stringify({ message, salt, ttl, requirePin })
             });
 
             if (!response.ok) {
@@ -55,8 +62,15 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             const data = await response.json();
+            console.log("Response:", data);
             linkElement.innerHTML = data.message.link;
             linkElement.href = data.message.link;
+            if (data.message.pin) {
+                pinElement.innerHTML = "PIN: " + data.message.pin;
+            }
+            else {
+                pinElement.innerHTML = "";
+            }
             copyButton.hidden = false;
             messageInput.value = initialMessageValue;
             saltInput.value = newSalt;
